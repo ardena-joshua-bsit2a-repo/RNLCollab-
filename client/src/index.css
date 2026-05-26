@@ -1,1 +1,25 @@
-@import 'tailwindcss'
+@import 'tailwindcss';
+
+@keyframes login-blob-float {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    33% {
+        transform: translate(2%, 4%) scale(1.05);
+    }
+    66% {
+        transform: translate(-3%, 2%) scale(0.98);
+    }
+}
+
+.login-blob {
+    animation: login-blob-float 18s ease-in-out infinite;
+}
+
+.login-blob-2 {
+    animation-delay: -6s;
+}
+
+.login-blob-3 {
+    animation-delay: -12s;
+}

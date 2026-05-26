@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Venue;
+use App\Services\ActivityLogger;
+use Illuminate\Http\Request;
 
 class VenueController extends Controller
 {
@@ -24,10 +25,19 @@ class VenueController extends Controller
             'venue_description' => ['nullable']
         ]);
 
-        Venue::create([
+        $venue = Venue::create([
             'venue_name' => $validated['venue'],
-            'venue_description' => $validated['description'] ?? null
+            'venue_description' => $validated['venue_description'] ?? null,
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'created',
+            'venue',
+            sprintf('Created venue: %s', $venue->venue_name),
+            $venue->venue_id,
+            $venue->venue_name,
+        );
 
         return response()->json([
             'message' => 'Venue Successfully Saved.'
@@ -53,7 +63,14 @@ class VenueController extends Controller
             'venue_description' => $validated['venue_description'] ?? null
         ]);
 
-        $venue = $venue->find($venue);
+        ActivityLogger::log(
+            $request,
+            'updated',
+            'venue',
+            sprintf('Updated venue: %s', $venue->venue_name),
+            $venue->venue_id,
+            $venue->venue_name,
+        );
 
         return response()->json([
             'venue' => $venue,
@@ -61,10 +78,19 @@ class VenueController extends Controller
         ], 200);
     }
 
-    public function destroyVenue(Venue $venue) {
+    public function destroyVenue(Request $request, Venue $venue) {
         $venue->update([
             'is_deleted' => true
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'deleted',
+            'venue',
+            sprintf('Deleted venue: %s', $venue->venue_name),
+            $venue->venue_id,
+            $venue->venue_name,
+        );
 
         return response()->json([
             'message' => 'Venue Successfully Deleted.'

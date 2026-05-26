@@ -1,93 +1,128 @@
-import { useEffect, useState, type FormEvent } from "react"
-import BackButton from "../../../components/Button/BackButton"
-import SubmitButton from "../../../components/Button/SubmitButton"
-import FloatingLabelInput from "../../../components/Input/FloatingLabelInput"
-import { useNavigate, useParams } from "react-router-dom"
-import RoleService from "../../../services/RoleService"
-import Spinner from "../../../components/Spinner/Spinner"
+import { useEffect, useState, type FormEvent } from "react";
+import BackButton from "../../../components/Button/BackButton";
+import SubmitButton from "../../../components/Button/SubmitButton";
+import FloatingLabelInput from "../../../components/Input/FloatingLabelInput";
+import { useNavigate, useParams } from "react-router-dom";
+import RoleService from "../../../services/RoleService";
+import Spinner from "../../../components/Spinner/Spinner";
 
 const DeleteRoleForm = () => {
-    const [loadingGet, setLoadingGet] = useState(false)
-    const [loadingDestroy, setLoadingDestroy] = useState(false)
-    const [role, setRole] = useState("")
-    const [description, setDescription] = useState("");
+  const [loadingGet, setLoadingGet] = useState(false);
+  const [loadingDestroy, setLoadingDestroy] = useState(false);
+  const [role, setRole] = useState("");
+  const [description, setDescription] = useState("");
 
-    const { role_id } = useParams()
-    const navigate = useNavigate()
+  const { role_id } = useParams();
+  const navigate = useNavigate();
 
-    const handleGetRole = async (role_id: string | number) => {
-        try {
-            setLoadingGet(true);
+  const handleGetRole = async (role_id: string | number) => {
+    try {
+      setLoadingGet(true);
 
-            const res = await RoleService.getRole(role_id);
+      const res = await RoleService.getRole(role_id);
 
-            if (res.status === 200) {
-                setRole(res.data.role.role_name)
-                setDescription(res.data.role.role_description || "")
-            } else {
-                console.error('Unexpected status error occured during deleting role: ', res.status)
-            }
-        } catch (error) {
-            {
-                console.error('Unexpected server error occured during deleting role: ', error)
-            };
-        } finally {
-            setLoadingGet(false)
-        }
-    };
-
-    const handleDestroyRole = async (e: FormEvent) => {
-        try {
-            e.preventDefault()
-
-            setLoadingDestroy(true)
-
-            const res = await RoleService.destroyRole(role_id!)
-
-            if (res.status === 200) {
-                navigate('/venue', { state: { message: res.data.message } })
-            } else {
-                console.error('Unexpected status error occured during deleting role: ', res.status);
-            };
-        } catch (error) {
-            console.error('Unexpected server error occured during deleting role : ', error);
-        } finally {
-            setLoadingDestroy(false);
-        }
+      if (res.status === 200) {
+        setRole(res.data.role.role_name);
+        setDescription(res.data.role.role_description || "");
+      } else {
+        console.error(
+          "Unexpected status error occured during deleting role: ",
+          res.status,
+        );
+      }
+    } catch (error) {
+      {
+        console.error(
+          "Unexpected server error occured during deleting role: ",
+          error,
+        );
+      }
+    } finally {
+      setLoadingGet(false);
     }
+  };
 
-    useEffect(() => {
-        if (role_id) {
-            const parsedRoleId = parseInt(role_id);
-            handleGetRole(parsedRoleId)
-        } else {
-            console.error('Unexpected parameter error occured during getting: ', role_id)
-        }
-    }, [role_id]);
+  const handleDestroyRole = async (e: FormEvent) => {
+    try {
+      e.preventDefault();
 
-    return (
-        <>
-            {loadingGet ? (
-                <div className="flex justify-center items-center mt-52">
-                    <Spinner size="lg" />
-                </div>
-            ) : (
-                <form onSubmit={handleDestroyRole}>
-                    <div className="mb-4">
-                        <FloatingLabelInput label="Role" type="text" name="role" value={role} readOnly />
-                    </div>
-                    <div className="mb-4">
-                        <FloatingLabelInput label="Description" type="text" name="description" value={description} readOnly />
-                    </div>
-                    <div className="flex justify-end gap-4">
-                            {!loadingDestroy && <BackButton label="Back" path="/roles-permissions" />}
-                        <SubmitButton label="Delete Role" className="bg-red-600 hover:bg-red-700" loading={loadingDestroy} loadingLabel="Deleting Role..." />
-                    </div>
-                </form>
+      setLoadingDestroy(true);
+
+      const res = await RoleService.destroyRole(role_id!);
+
+      if (res.status === 200) {
+        navigate("/roles-permissions", {
+          state: { message: res.data.message },
+        });
+      } else {
+        console.error(
+          "Unexpected status error occured during deleting role: ",
+          res.status,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Unexpected server error occured during deleting role : ",
+        error,
+      );
+    } finally {
+      setLoadingDestroy(false);
+    }
+  };
+
+  useEffect(() => {
+    if (role_id) {
+      const parsedRoleId = parseInt(role_id);
+      handleGetRole(parsedRoleId);
+    } else {
+      console.error(
+        "Unexpected parameter error occured during getting: ",
+        role_id,
+      );
+    }
+  }, [role_id]);
+
+  return (
+    <>
+      {loadingGet ? (
+        <div className="flex justify-center items-center mt-52">
+          <Spinner size="lg" />
+        </div>
+      ) : (
+        <form onSubmit={handleDestroyRole}>
+          <div className="mb-4">
+            <FloatingLabelInput
+              label="Role"
+              type="text"
+              name="role"
+              value={role}
+              readOnly
+            />
+          </div>
+          <div className="mb-4">
+            <FloatingLabelInput
+              label="Description"
+              type="text"
+              name="description"
+              value={description}
+              readOnly
+            />
+          </div>
+          <div className="flex justify-end gap-4">
+            {!loadingDestroy && (
+              <BackButton label="Back" path="/roles-permissions" />
             )}
+            <SubmitButton
+              label="Delete Role"
+              className="bg-red-600 hover:bg-red-700"
+              loading={loadingDestroy}
+              loadingLabel="Deleting Role..."
+            />
+          </div>
+        </form>
+      )}
+    </>
+  );
+};
 
-        </>
-    )
-}
-
-export default DeleteRoleForm
+export default DeleteRoleForm;

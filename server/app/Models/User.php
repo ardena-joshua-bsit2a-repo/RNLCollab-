@@ -55,9 +55,18 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getAuthIdentifierName(): string
+    {
+        return 'user_id';
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role?->role_name === 'Super Admin';
     }
 
     public function role(): BelongsTo {

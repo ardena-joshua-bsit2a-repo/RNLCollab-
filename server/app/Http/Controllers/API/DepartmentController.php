@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Department;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 
 class DepartmentController extends Controller
@@ -23,10 +24,19 @@ class DepartmentController extends Controller
             'department_description' => ['nullable', 'string', 'max:255']
         ]);
 
-        Department::create([
+        $department = Department::create([
             'department_name' => $validated['department_name'],
             'department_description' => $validated['department_description'] ?? null,
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'created',
+            'department',
+            sprintf('Created department: %s', $department->department_name),
+            $department->department_id,
+            $department->department_name,
+        );
 
         return response()->json([
             'message' => 'Department Successfully Saved.'
@@ -53,16 +63,34 @@ class DepartmentController extends Controller
             'department_description' => $validated['department_description'] ?? null,
         ]);
 
+        ActivityLogger::log(
+            $request,
+            'updated',
+            'department',
+            sprintf('Updated department: %s', $department->department_name),
+            $department->department_id,
+            $department->department_name,
+        );
+
         return response()->json([
             'message' => 'Department Successfully Updated.',
             'department' => $department
         ], 200);
     }
 
-    public function destroyDepartment (Department $department) {
+    public function destroyDepartment (Request $request, Department $department) {
         $department ->update([
             'is_deleted' => true
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'deleted',
+            'department',
+            sprintf('Deleted department: %s', $department->department_name),
+            $department->department_id,
+            $department->department_name,
+        );
 
         return response()->json([
             'message' => 'Department Successfully Deleted.'

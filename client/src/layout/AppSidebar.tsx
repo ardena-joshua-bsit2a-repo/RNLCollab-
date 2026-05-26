@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { useSidebar } from "../contexts/SidebarContext"
 import { Link } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
 
 const AppSidebar = () => {
     const { isOpen, toggleSidebar } = useSidebar()
+    const { isSuperAdmin } = useAuth()
 
     const [openMenus, setOpenMenus] = useState({})
 
@@ -19,62 +21,36 @@ const AppSidebar = () => {
             text: "Dashboard",
             path: "/",
         },
-        {
-            text: "User Management",
-            children: [
+        ...(isSuperAdmin
+            ? [
                 {
-                    text: "Roles & Permissions",
-                    path: "/roles-permissions",
-
+                    text: "User Management",
+                    children: [
+                        { text: "Roles & Permissions", path: "/roles-permissions" },
+                        { text: "Department / Office", path: "/departments" },
+                        { text: "All Users", path: "/users" },
+                    ],
                 },
-                {
-                    text: "Department / Office",
-                    path: "/departments",
-                },
-                {
-                    text: "All Users",
-                    path: "/users",
-                },
-            ],
-        },
+            ]
+            : []),
         {
             text: "Event Management",
             children: [
-                {
-                    text: "Event Venue",
-                    path: "/venue",
-
-                },
-                // {
-                //     text: "Department / Office",
-                //     path: "/departments",
-                // },
-                {
-                    text: "All Events",
-                    path: "/events",
-                },
+                { text: "Event Venue", path: "/venue" },
+                { text: "All Events", path: "/events" },
             ],
         },
         {
             text: "Trash",
             children: [
-                {
-                    text: "User Trash",
-                    path: "/user-trash",
-
-                },
-                {
-                    text: "Event Trash",
-                    path: "/event-trash",
-                },
+                ...(isSuperAdmin ? [{ text: "User Trash", path: "/user-trash" }] : []),
+                { text: "Event Trash", path: "/event-trash" },
             ],
         },
-        {
-            text: "Activity Logs",
-            path: "/logs",
-        },
-        
-    ]
+        ...(isSuperAdmin
+            ? [{ text: "Activity Logs", path: "/logs" }]
+            : []),
+    ].filter((item) => !item.children || item.children.length > 0)
 
     return (
         <>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 
@@ -36,7 +37,7 @@ class UserController extends Controller
             'password_confirmation' => ['required', 'min:6', 'max:12']
         ]);
 
-        User::create([
+        $user = User::create([
             'first_name' => $validated['first_name'],
             'middle_name'=> $validated['middle_name'],
             'last_name' => $validated['last_name'],
@@ -48,6 +49,15 @@ class UserController extends Controller
             'username' => $validated ['username'],
             'password' => $validated ['password']
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'created',
+            'user',
+            sprintf('Created user account: %s', $validated['username']),
+            $user->user_id,
+            ActivityLogger::userDisplayName($user),
+        );
 
         return response()->json([
             'message' => 'User Successfully Saved.'
@@ -79,16 +89,34 @@ class UserController extends Controller
             'username' => $validated ['username'],
         ]);
 
+        ActivityLogger::log(
+            $request,
+            'updated',
+            'user',
+            sprintf('Updated user: %s', $validated['username']),
+            $user->user_id,
+            ActivityLogger::userDisplayName($user),
+        );
+
         return response()->json([
             'message' => 'User Successfully Updated.',
             'user' => $user
         ], 200);
     }
 
-    public function destroyUser(User $user) {
+    public function destroyUser(Request $request, User $user) {
         $user->update([
             'is_deleted' => true
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'deleted',
+            'user',
+            sprintf('Moved user to trash: %s', $user->username),
+            $user->user_id,
+            ActivityLogger::userDisplayName($user),
+        );
 
         return response()->json([
             'message' => 'User Successfully Deleted.'
@@ -106,20 +134,42 @@ class UserController extends Controller
         ], 200);
     }
 
-        public function restoreUser(User $user)
+        public function restoreUser(Request $request, User $user)
     {
         $user->update([
             'is_deleted' => false
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'restored',
+            'user',
+            sprintf('Restored user from trash: %s', $user->username),
+            $user->user_id,
+            ActivityLogger::userDisplayName($user),
+        );
 
         return response()->json([
             'message' => 'User restored successfully.'
         ], 200);
     }
 
-    public function forceDeleteUser(User $user)
+    public function forceDeleteUser(Request $request, User $user)
     {
+        $label = ActivityLogger::userDisplayName($user);
+        $userId = $user->user_id;
+        $username = $user->username;
+
         $user->delete();
+
+        ActivityLogger::log(
+            $request,
+            'force_deleted',
+            'user',
+            sprintf('Permanently deleted user: %s', $username),
+            $userId,
+            $label,
+        );
 
         return response()->json([
             'message' => 'User permanently deleted.'

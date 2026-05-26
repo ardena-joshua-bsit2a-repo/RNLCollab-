@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Event;
+use App\Services\ActivityLogger;
 use Illuminate\Validation\Rule;
 
 class EventController extends Controller
@@ -39,7 +40,7 @@ class EventController extends Controller
         // $start = strtotime($validated['time_start']);
         // $end = strtotime($validated['time_end']);
 
-        Event::create([
+        $event = Event::create([
             'activity_title' => $validated['activity_title'],
             'activity_description' => $validated['activity_description'] ?? null,
             'date' => $validated['date'],
@@ -53,6 +54,15 @@ class EventController extends Controller
             'venue_id' => $validated['venue_id'],
             'department_id' => $validated['department_id']
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'created',
+            'event',
+            sprintf('Created event: %s', $event->activity_title),
+            $event->event_id,
+            $event->activity_title,
+        );
 
         return response()->json([
             'message' => 'Event Successfully Saved.'
@@ -91,17 +101,35 @@ class EventController extends Controller
             'department_id' => $validated['department_id']
         ]);
 
+        ActivityLogger::log(
+            $request,
+            'updated',
+            'event',
+            sprintf('Updated event: %s', $event->activity_title),
+            $event->event_id,
+            $event->activity_title,
+        );
+
         return response()->json([
             'message' => 'Event Successfully Updated.',
             'event' => $event
         ], 200);
     }
 
-    public function destroyEvent(Event $event)
+    public function destroyEvent(Request $request, Event $event)
     {
         $event->update([
             'is_deleted' => true
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'deleted',
+            'event',
+            sprintf('Moved event to trash: %s', $event->activity_title),
+            $event->event_id,
+            $event->activity_title,
+        );
 
         return response()->json([
             'message' => 'Event Successfully Deleted.'
@@ -123,18 +151,27 @@ class EventController extends Controller
         ]);
     }
 
-    public function restoreEvent(Event $event)
+    public function restoreEvent(Request $request, Event $event)
     {
         $event->update([
             'is_deleted' => false
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'restored',
+            'event',
+            sprintf('Restored event from trash: %s', $event->activity_title),
+            $event->event_id,
+            $event->activity_title,
+        );
 
         return response()->json([
             'message' => 'Event restored successfully.'
         ]);
     }
 
-    public function forceDeleteEvent($event_id)
+    public function forceDeleteEvent(Request $request, $event_id)
     {
         $event = Event::where('event_id', $event_id)->first();
 
@@ -144,7 +181,19 @@ class EventController extends Controller
             ], 404);
         }
 
+        $title = $event->activity_title;
+        $eventId = $event->event_id;
+
         $event->delete();
+
+        ActivityLogger::log(
+            $request,
+            'force_deleted',
+            'event',
+            sprintf('Permanently deleted event: %s', $title),
+            $eventId,
+            $title,
+        );
 
         return response()->json([
             'message' => 'Event permanently deleted.'

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -23,10 +24,19 @@ class RoleController extends Controller
             'role_description' => ['nullable', 'string', 'max:255']
         ]);
 
-        Role::create([
+        $role = Role::create([
             'role_name' => $validated['role_name'],
             'role_description' => $validated['role_description'] ?? null,
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'created',
+            'role',
+            sprintf('Created role: %s', $role->role_name),
+            $role->role_id,
+            $role->role_name,
+        );
 
         return response()->json([
             'message' => 'Role Successfully Saved.'
@@ -53,16 +63,34 @@ class RoleController extends Controller
             'role_description' => $validated['role_description'] ?? null,
         ]);
 
+        ActivityLogger::log(
+            $request,
+            'updated',
+            'role',
+            sprintf('Updated role: %s', $role->role_name),
+            $role->role_id,
+            $role->role_name,
+        );
+
         return response()->json([
             'message' => 'Role Successfully Updated.',
             'role' => $role
         ], 200);
     }
 
-    public function destroyRole (Role $role) {
+    public function destroyRole (Request $request, Role $role) {
         $role ->update([
             'is_deleted' => true
         ]);
+
+        ActivityLogger::log(
+            $request,
+            'deleted',
+            'role',
+            sprintf('Deleted role: %s', $role->role_name),
+            $role->role_id,
+            $role->role_name,
+        );
 
         return response()->json([
             'message' => 'Role Successfully Deleted.'

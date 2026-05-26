@@ -13,48 +13,43 @@ import EditVenuePage from "../pages/Venue/EditVenuePage"
 import DeleteVenuePage from "../pages/Venue/DeleteVenuePage"
 import EventMainPage from "../pages/Events/EventMainPage"
 import TrashEventPage from "../pages/Trash/TrashEventPage"
-
+import DashboardPage from "../pages/Dashboard/DashboardPage"
+import ActivityLogsPage from "../pages/ActivityLogs/ActivityLogsPage"
+import LoginPage from "../pages/Auth/LoginPage"
+import ProtectedRoute from "./ProtectedRoute"
 
 const AppRoutes = () => {
     return (
-        <>
+        <Routes>
+            <Route path="/login" element={<LoginPage />} />
 
-            <Routes>
+            <Route element={<ProtectedRoute />}>
                 <Route element={<AppLayout />}>
-                    {/* Dashboard */}
-                    
-                
-                    {/* Roles-Permissions */}
-                    <Route path="/roles-permissions" element={<RolePage />} />
-                    <Route path="/roles-permissions/edit/:role_id" element={<EditRolePage />} />
-                    <Route path="/roles-permissions/delete/:role_id" element={<DeleteRolePage />} />
+                    <Route path="/" element={<DashboardPage />} />
 
-                    {/* Department */}
-                    <Route path="/departments" element={<DepartmentPage />} />
-                    <Route path="/departments/edit/:department_id" element={<EditDepartmentPage />} />
-                    <Route path="/departments/delete/:department_id" element={<DeleteDepartmentPage />} />
+                    <Route element={<ProtectedRoute requireSuperAdmin />}>
+                        <Route path="/roles-permissions" element={<RolePage />} />
+                        <Route path="/roles-permissions/edit/:role_id" element={<EditRolePage />} />
+                        <Route path="/roles-permissions/delete/:role_id" element={<DeleteRolePage />} />
 
-                    {/* Users */}
-                    <Route path="/users" element={<UserMainPage />} />
+                        <Route path="/departments" element={<DepartmentPage />} />
+                        <Route path="/departments/edit/:department_id" element={<EditDepartmentPage />} />
+                        <Route path="/departments/delete/:department_id" element={<DeleteDepartmentPage />} />
 
-                    {/* Venues */}
+                        <Route path="/users" element={<UserMainPage />} />
+                        <Route path="/user-trash" element={<TrashMainPage />} />
+                        <Route path="/logs" element={<ActivityLogsPage />} />
+                    </Route>
+
                     <Route path="/venue" element={<VenuePage />} />
                     <Route path="/venue/edit/:venue_id" element={<EditVenuePage />} />
                     <Route path="/venue/delete/:venue_id" element={<DeleteVenuePage />} />
 
-                    {/* Events */}
                     <Route path="/events" element={<EventMainPage />} />
-
-                    {/* Activity Logs */}
-                    
-
-                    {/* Trash */}
-                    <Route path="/user-trash" element={<TrashMainPage />} />
                     <Route path="/event-trash" element={<TrashEventPage />} />
-
                 </Route>
-            </Routes>
-        </>
+            </Route>
+        </Routes>
     )
 }
 

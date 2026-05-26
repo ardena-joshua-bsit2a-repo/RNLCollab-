@@ -1,10 +1,18 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useHeader } from "../contexts/HeaderContext";
-import { useSidebar } from "../contexts/SidebarContext"
+import { useSidebar } from "../contexts/SidebarContext";
+import { getUserDisplayName, useAuth } from "../contexts/AuthContext";
 
 const AppHeader = () => {
     const { isOpen, toggleUserMenu } = useHeader();
     const { toggleSidebar } = useSidebar();
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSignOut = async () => {
+        await logout();
+        navigate("/login", { replace: true });
+    };
 
     return (
         <>
@@ -79,10 +87,10 @@ const AppHeader = () => {
                                     id="dropdown-user">
                                     <div className="px-4 py-3 border-b border-default-medium" role="none">
                                         <p className="text-sm font-medium text-heading" role="none">
-                                            Super Admin
+                                            {getUserDisplayName(user) || "User"}
                                         </p>
                                         <p className="text-sm text-body truncate" role="none">
-                                            superAdmin@gmail.com
+                                            {user?.role?.role_name ?? "—"} · {user?.email ?? ""}
                                         </p>
                                     </div>
                                     <ul className="p-2 text-sm text-body font-medium " role="none">
@@ -96,7 +104,14 @@ const AppHeader = () => {
                                             <a href="#" className="inline-flex items-center w-full p-2 rounded-lg hover:bg-blue-500/50 hover:text-heading" role="menuitem">Earnings</a>
                                         </li> */}
                                         <li>
-                                            <Link to="#" className="inline-flex items-center w-full p-2 rounded-lg hover:bg-blue-500/50 hover:text-heading" role="menuitem">Sign out</Link>
+                                            <button
+                                                type="button"
+                                                onClick={handleSignOut}
+                                                className="inline-flex items-center w-full p-2 rounded-lg hover:bg-blue-500/50 hover:text-heading text-left"
+                                                role="menuitem"
+                                            >
+                                                Sign out
+                                            </button>
                                         </li>
                                     </ul>
                                 </div>

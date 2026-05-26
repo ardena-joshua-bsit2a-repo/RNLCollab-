@@ -23,8 +23,18 @@ AxiosInstance.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response.status !== 422) {
-            console.error('Unexpected response error:', error);
+        const status = error.response?.status;
+        const url = error.config?.url ?? "";
+
+        if (status === 401 && !url.includes("/auth/login")) {
+            localStorage.removeItem("token");
+            if (window.location.pathname !== "/login") {
+                window.location.href = "/login";
+            }
+        }
+
+        if (status !== 422) {
+            console.error("Unexpected response error:", error);
         }
 
         return Promise.reject(error);
