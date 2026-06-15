@@ -2,10 +2,12 @@ import ToastMessage from "../../components/ToastMessage/ToastMessage";
 import { useModal } from "../../hooks/useModal"
 import { useRefresh } from "../../hooks/useRefresh";
 import { useToastMessage } from "../../hooks/useToastMessage";
+import type { UserColumns } from "../../interfaces/UserInterface";
 import AddUserFormModal from "./components/AddUserFormModal"
 import DeleteUserFormModal from "./components/DeleteUserFormModal";
 import EditUserFormModal from "./components/EditUserFormModal";
 import UserList from "./components/UserList"
+import UserViewModal from "./components/UserViewModal";
 
 
 const UserMainPage = () => {
@@ -35,6 +37,13 @@ const UserMainPage = () => {
     showToastMessage,
     closeToastMessage
   } = useToastMessage("", false, false);
+
+  const {
+    isOpen: isViewModalOpen,
+    selectedItem: selectedUserForView,
+    openModal: openViewModal,
+    closeModal: closeViewModal,
+} = useModal<UserColumns>(false)
 
   const {
     refresh,
@@ -76,9 +85,15 @@ const UserMainPage = () => {
         onAddUser={openAddUserFormModal}
         onEditUser={(user) => openEditUserFormModal(user)}
         onDeleteUser={(user) => openDeleteUserFormModal(user)}
+        onViewUser={(user) => openViewModal(user)}
         refreshKey={refresh}
       /> 
 
+      <UserViewModal
+          isOpen={isViewModalOpen}
+          onClose={closeViewModal}
+          user={selectedUserForView}
+      />
     </>
   )
 }

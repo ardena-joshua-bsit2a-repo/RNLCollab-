@@ -19,6 +19,7 @@ interface AuthContextValue {
     isSuperAdmin: boolean;
     login: (credentials: LoginCredentials) => Promise<void>;
     logout: () => Promise<void>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -81,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             isSuperAdmin: user?.role?.role_name === SUPER_ADMIN_ROLE,
             login,
             logout,
+            refreshUser: fetchMe, 
         }),
         [user, isLoading]
     );

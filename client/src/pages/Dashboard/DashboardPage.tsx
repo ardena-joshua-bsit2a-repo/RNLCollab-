@@ -1,26 +1,34 @@
-import { useAuth, getUserDisplayName } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+import AdminDashboard from "./components/AdminDashboard";
+import UserDashboard from "./components/UserDashnoard";
 
+/**
+ * DashboardPage — RBAC gate
+ *
+ * This is the single entry point for the /dashboard route.
+ * It reads the role from AuthContext (set at login, verified server-side)
+ * and renders the appropriate dashboard.
+ *
+ * ✅ Admin  → AdminDashboard  (all events, all users, approvals, conflicts, export)
+ * ✅ User   → UserDashboard   (own bookings only, calendar reference layer)
+ *
+ * Neither child component receives props it shouldn't have:
+ *  - UserDashboard never receives the full event list or user count.
+ *  - AdminDashboard is never rendered for non-admin sessions.
+ *
+ * The real enforcement happens at the API/server layer —
+ * EventService.loadUserEvents() is scoped to the authenticated user's ID
+ * on the backend, so even a direct API call cannot retrieve other users' data.
+ */
 const DashboardPage = () => {
-    const { user, isSuperAdmin } = useAuth();
+    const { isSuperAdmin } = useAuth();
 
-    return (
-        <div className="space-y-4">
-            <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
-            <p className="text-gray-300">
-                Welcome back, {getUserDisplayName(user)}.
-            </p>
-            <div className="bg-gray-900 border border-default-medium rounded-lg p-4 text-sm text-gray-300 space-y-2">
-                <p><span className="text-gray-500">Role:</span> {user?.role?.role_name}</p>
-                <p><span className="text-gray-500">Department:</span> {user?.department?.department_name}</p>
-                <p>
-                    <span className="text-gray-500">Access:</span>{" "}
-                    {isSuperAdmin
-                        ? "Full administration (users, roles, departments, events, venues)"
-                        : "Events and venues"}
-                </p>
-            </div>
-        </div>
-    );
+    // Hard role gate — one line, no leakage
+    if (isSuperAdmin) {
+        return <AdminDashboard />;
+    }
+
+    return <UserDashboard />;
 };
 
 export default DashboardPage;

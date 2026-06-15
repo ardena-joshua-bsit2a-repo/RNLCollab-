@@ -26,6 +26,11 @@ export interface EventColumns {
     venue_id: number;
     department_id: number;
 
+    status?: "pending" | "approved" | "rejected";
+    reviewed_by?: number | null;
+    reviewed_at?: string | null;
+    rejection_reason?: string | null;
+
     is_deleted: boolean;
 
     created_at: string;

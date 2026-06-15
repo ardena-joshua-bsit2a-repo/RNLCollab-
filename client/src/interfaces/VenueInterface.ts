@@ -9,4 +9,5 @@ export interface VenueColumns {
 
 export interface VenueFieldErrors {
     venue?: string[];
+    venue_description: string;
 }

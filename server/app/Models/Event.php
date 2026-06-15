@@ -31,8 +31,19 @@ class Event extends Model
         'user_id',
         'venue_id',
         'department_id',
+        'status',
+        'reviewed_by',
+        'reviewed_at',
+        'rejection_reason',
         'is_deleted',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'reviewed_at' => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo {
         return $this->belongsTo(User::class, 'user_id', 'user_id');
@@ -44,5 +55,10 @@ class Event extends Model
 
     public function department(): BelongsTo {
         return $this->belongsTo(Department::class, 'department_id', 'department_id');
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by', 'user_id');
     }
 }

@@ -31,7 +31,6 @@ class UserController extends Controller
             'role' => ['required'],
             'department' => ['required'],
             'email' => ['required', 'email', Rule::unique('tbl_users', 'email')],
-            'status' => ['required', 'in:active,inactive'],
             'username' => ['required', 'string', 'min:6', 'max:12', Rule::unique('tbl_users', 'username')],
             'password' => ['required', 'string', 'min:6', 'max:12', 'confirmed'],
             'password_confirmation' => ['required', 'min:6', 'max:12']
@@ -45,7 +44,6 @@ class UserController extends Controller
             'role_id' => $validated['role'],
             'department_id' => $validated['department'],
             'email' => $validated ['email'],
-            'status' => $validated ['status'],
             'username' => $validated ['username'],
             'password' => $validated ['password']
         ]);
@@ -60,7 +58,8 @@ class UserController extends Controller
         );
 
         return response()->json([
-            'message' => 'User Successfully Saved.'
+            'message' => 'User Successfully Saved.',
+            'user' => $user
         ], 200);
     }
 
@@ -73,7 +72,6 @@ class UserController extends Controller
             'role' => ['required'],
             'department' => ['required'],
             'email' => ['required', 'email', Rule::unique('tbl_users', 'email')->ignore($user->user_id, 'user_id')],
-            'status' => ['required', 'in:active,inactive'],
             'username' => ['required', 'string', 'min:6', 'max:12', Rule::unique('tbl_users', 'username')->ignore($user->user_id, 'user_id')]
         ]);
 
@@ -85,7 +83,6 @@ class UserController extends Controller
             'role_id' => $validated['role'],
             'department_id' => $validated['department'],
             'email' => $validated ['email'],
-            'status' => $validated ['status'],
             'username' => $validated ['username'],
         ]);
 
@@ -173,6 +170,100 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'User permanently deleted.'
+        ], 200);
+    }
+
+    public function uploadProfilePhoto(Request $request, User $user)
+    {
+        $request->validate([
+            'profile_photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']
+        ]);
+
+        if ($user->profile_photo) {
+            $oldPath = str_replace('/storage/', '', $user->profile_photo);
+            \Storage::disk('public')->delete($oldPath);
+        }
+
+        $path = $request->file('profile_photo')->store('profile_photos', 'public');
+        $relativePath = '/storage/' . $path;
+
+        $user->update(['profile_photo' => $relativePath]);
+
+        ActivityLogger::log(
+            $request,
+            'updated',
+            'user',
+            sprintf('Updated profile photo for user: %s', $user->username),
+            $user->user_id,
+            ActivityLogger::userDisplayName($user),
+        );
+
+        return response()->json([
+            'message' => 'Profile photo updated.',
+            'profile_photo' => $relativePath
+        ], 200);
+    }
+
+    public function removeProfilePhoto(Request $request, User $user)
+    {
+        if ($user->profile_photo) {
+            $oldPath = str_replace('/storage/', '', $user->profile_photo);
+            \Storage::disk('public')->delete($oldPath);
+        }
+
+        $user->update(['profile_photo' => null]);
+
+        return response()->json([
+            'message' => 'Profile photo removed.',
+        ], 200);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'first_name'  => ['required', 'max:55'],
+            'middle_name' => ['nullable', 'max:55'],
+            'last_name'   => ['required', 'max:55'],
+            'suffix_name' => ['nullable', 'max:55'],
+            'email'       => ['required', 'email', Rule::unique('tbl_users', 'email')->ignore($user->user_id, 'user_id')],
+            'username'    => ['required', 'string', 'min:6', 'max:12', Rule::unique('tbl_users', 'username')->ignore($user->user_id, 'user_id')],
+            'current_password'      => ['nullable', 'string'],
+            'new_password'          => ['nullable', 'string', 'min:6', 'max:12', 'confirmed'],
+            'new_password_confirmation' => ['nullable', 'string'],
+        ]);
+
+        if (!empty($validated['new_password'])) {
+            if (empty($validated['current_password']) || !Hash::check($validated['current_password'], $user->password)) {
+                return response()->json(['message' => 'Current password is incorrect.'], 422);
+            }
+            $user->password = $validated['new_password'];
+        }
+
+        $user->update([
+            'first_name'  => $validated['first_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
+            'last_name'   => $validated['last_name'],
+            'suffix_name' => $validated['suffix_name'] ?? null,
+            'email'       => $validated['email'],
+            'username'    => $validated['username'],
+        ]);
+
+        if (!empty($validated['new_password'])) {
+            $user->save();
+        }
+
+        ActivityLogger::log(
+            $request, 'updated', 'user',
+            sprintf('Updated own profile: %s', $user->username),
+            $user->user_id,
+            ActivityLogger::userDisplayName($user),
+        );
+
+        return response()->json([
+            'message' => 'Profile updated successfully.',
+            'user'    => $user->fresh(['role', 'department']),
         ], 200);
     }
 }

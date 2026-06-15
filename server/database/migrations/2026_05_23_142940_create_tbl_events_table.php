@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('venue_id');
-            $table->unsignedBigInteger('department_id');
+            $table->unsignedBigInteger('department_id')->nullable(); 
             $table->tinyInteger('is_deleted')->default(false);
 
             $table->timestamps();

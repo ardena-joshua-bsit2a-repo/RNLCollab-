@@ -4,6 +4,7 @@ import SubmitButton from "../../../components/Button/SubmitButton"
 import FloatingLabelInput from "../../../components/Input/FloatingLabelInput"
 import Modal from "../../../components/Modal"
 import FloatingLabelSelect from "../../../components/Select/FloatingLabelselect"
+import { useAuth } from "../../../contexts/AuthContext"
 
 import DepartmentService from "../../../services/DepartmentService"
 import UserService from "../../../services/UserService"
@@ -14,6 +15,19 @@ import type { EventColumns, EventFieldErrors } from "../../../interfaces/EventIn
 import type { UserColumns } from "../../../interfaces/UserInterface"
 import type { DepartmentsColumns } from "../../../interfaces/DepartmentInterface"
 import type { VenueColumns } from "../../../interfaces/VenueInterface"
+
+import {
+    CalendarDays,
+    Clock,
+    User,
+    Building2,
+    MapPin,
+    Phone,
+    Mail,
+    Pencil,
+    FileText,
+    Shield,
+} from "lucide-react"
 
 interface EditEventFormModalProps {
     event: EventColumns | null
@@ -30,6 +44,7 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
     isOpen,
     onClose
 }) => {
+    const { isSuperAdmin, user } = useAuth()
 
     const [loadingUsers, setLoadingUsers] = useState(false)
     const [users, setUsers] = useState<UserColumns[]>([])
@@ -60,55 +75,37 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
     const handleUpdateEvent = async (e: FormEvent) => {
         try {
             e.preventDefault()
-
             setLoadingUpdate(true)
 
             const payload = {
                 activity_title: activityTitle,
                 activity_description: activityDescription,
-                date: date,
+                date,
                 number_of_days: numberOfDays,
                 time_start: timeStart,
                 time_end: timeEnd,
                 requested_by: requestedBy,
                 telephone_number: telephoneNumber,
-                email: email,
-                user_id: userId,
+                email,
+                user_id: isSuperAdmin ? userId : user?.user_id,
                 venue_id: venueId,
-                department_id: departmentId,
+                department_id: isSuperAdmin ? departmentId : user?.department_id,
             }
 
-            const res = await EventService.updateEvent(
-                event?.event_id!,
-                payload
-            )
+            const res = await EventService.updateEvent(event?.event_id!, payload)
 
             if (res.status === 200) {
-
                 onEventUpdated(res.data.message)
-
                 refreshKey()
                 setErrors({})
-
                 onClose()
-            } else {
-                console.error(
-                    "Unexpected status error occured during updating event: ",
-                    res.status
-                )
             }
-
         } catch (error: any) {
-
             if (error.response && error.response.status === 422) {
                 setErrors(error.response.data.errors)
             } else {
-                console.error(
-                    "Unexpected server error occured during updating event: ",
-                    error
-                )
+                console.error("Unexpected error updating event:", error)
             }
-
         } finally {
             setLoadingUpdate(false)
         }
@@ -116,25 +113,11 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
 
     const handleLoadUsers = async () => {
         try {
-
             setLoadingUsers(true)
-
             const res = await UserService.loadUsers()
-
-            if (res.status === 200) {
-                setUsers(res.data.users)
-            } else {
-                console.error(
-                    "Unexpected status error occured during loading users: ",
-                    res.status
-                )
-            }
-
+            if (res.status === 200) setUsers(res.data.users)
         } catch (error) {
-            console.error(
-                "Unexpected server error occured during loading users: ",
-                error
-            )
+            console.error("Error loading users:", error)
         } finally {
             setLoadingUsers(false)
         }
@@ -142,25 +125,11 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
 
     const handleLoadDepartments = async () => {
         try {
-
             setLoadingDepartments(true)
-
             const res = await DepartmentService.loadDepartment()
-
-            if (res.status === 200) {
-                setDepartments(res.data.departments)
-            } else {
-                console.error(
-                    "Unexpected status error occured during loading departments: ",
-                    res.status
-                )
-            }
-
+            if (res.status === 200) setDepartments(res.data.departments)
         } catch (error) {
-            console.error(
-                "Unexpected server error occured during loading departments: ",
-                error
-            )
+            console.error("Error loading departments:", error)
         } finally {
             setLoadingDepartments(false)
         }
@@ -168,44 +137,28 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
 
     const handleLoadVenues = async () => {
         try {
-
             setLoadingVenues(true)
-
             const res = await VenueService.loadVenue()
-
-            if (res.status === 200) {
-                setVenues(res.data.venues)
-            } else {
-                console.error(
-                    "Unexpected status error occured during loading venues: ",
-                    res.status
-                )
-            }
-
+            if (res.status === 200) setVenues(res.data.venues)
         } catch (error) {
-            console.error(
-                "Unexpected server error occured during loading venues: ",
-                error
-            )
+            console.error("Error loading venues:", error)
         } finally {
             setLoadingVenues(false)
         }
     }
 
     useEffect(() => {
-
         if (isOpen) {
-            handleLoadUsers()
-            handleLoadDepartments()
             handleLoadVenues()
+            if (isSuperAdmin) {
+                handleLoadUsers()
+                handleLoadDepartments()
+            }
         }
-
     }, [isOpen])
 
     useEffect(() => {
-
         if (isOpen && event) {
-
             setActivityTitle(event.activity_title)
             setActivityDescription(event.activity_description ?? "")
             setDate(event.date)
@@ -215,33 +168,48 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
             setRequestedBy(event.requested_by)
             setTelephoneNumber(event.telephone_number ?? "")
             setEmail(event.email)
+            setVenueId(event.venue?.venue_id.toString() ?? "")
 
-            setUserId(event.user.user_id.toString())
-            setVenueId(event.venue.venue_id.toString())
-            setDepartmentId(event.department.department_id.toString())
+            if (isSuperAdmin) {
+                setUserId(event.user?.user_id.toString() ?? "")
+                setDepartmentId(event.department?.department_id.toString() ?? "")
+            }
         }
-
     }, [isOpen, event])
 
     return (
-        <>
-            <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
+        <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
+            <form onSubmit={handleUpdateEvent} className="space-y-6">
 
-                <form onSubmit={handleUpdateEvent}>
+                {/* Header */}
+                <div className="relative overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+                    <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl" />
+                    <div className="absolute bottom-0 left-0 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
 
-                    <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-6 px-1">
-                        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-                            Edit Event Form
-                        </h1>
+                    <div className="relative flex items-center gap-4">
+                        <div className="rounded-2xl bg-cyan-500/10 p-3">
+                            <Pencil className="h-6 w-6 text-cyan-400" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">
+                                Edit Booking
+                            </h1>
+                            <p className="text-sm text-gray-400 mt-1">
+                                Update your event booking details and schedule.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                            Update the event information below.
-                        </p>
+                {/* Activity Details */}
+                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5">
+                    <div className="mb-5 flex items-center gap-2">
+                        <FileText size={18} className="text-cyan-400" />
+                        <h2 className="font-semibold text-white">Activity Details</h2>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 border-b border-b-gray-100 mb-4">
-
-                        <div className="col-span-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
                             <FloatingLabelInput
                                 label="Activity Title"
                                 type="text"
@@ -250,10 +218,11 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
                                 onChange={(e) => setActivityTitle(e.target.value)}
                                 errors={errors.activity_title}
                                 required
+                                autoFocus
                             />
                         </div>
 
-                        <div className="col-span-2">
+                        <div className="md:col-span-2">
                             <FloatingLabelInput
                                 label="Activity Description"
                                 type="text"
@@ -263,79 +232,87 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
                                 errors={errors.activity_description}
                             />
                         </div>
+                    </div>
+                </div>
 
-                        <div>
-                            <FloatingLabelInput
-                                label="Date"
-                                type="date"
-                                name="date"
-                                value={date}
-                                onChange={(e) => setDate(e.target.value)}
-                                errors={errors.date}
-                                required
-                            />
-                        </div>
+                {/* Schedule */}
+                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5">
+                    <div className="mb-5 flex items-center gap-2">
+                        <CalendarDays size={18} className="text-blue-400" />
+                        <h2 className="font-semibold text-white">Schedule</h2>
+                    </div>
 
-                        <div>
-                            <FloatingLabelInput
-                                label="Number of Days"
-                                type="number"
-                                name="number_of_days"
-                                value={numberOfDays}
-                                onChange={(e) => setNumberOfDays(e.target.value)}
-                                errors={errors.number_of_days}
-                                required
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FloatingLabelInput
+                            label="Date"
+                            type="date"
+                            name="date"
+                            value={date}
+                            onChange={(e) => setDate(e.target.value)}
+                            errors={errors.date}
+                            required
+                        />
 
-                        <div>
-                            <FloatingLabelInput
-                                label="Time Start"
-                                type="time"
-                                name="time_start"
-                                value={timeStart}
-                                onChange={(e) => setTimeStart(e.target.value)}
-                                errors={errors.time_start}
-                                required
-                            />
-                        </div>
+                        <FloatingLabelInput
+                            label="Number of Days"
+                            type="number"
+                            name="number_of_days"
+                            value={numberOfDays}
+                            onChange={(e) => setNumberOfDays(e.target.value)}
+                            errors={errors.number_of_days}
+                            required
+                        />
 
-                        <div>
-                            <FloatingLabelInput
-                                label="Time End"
-                                type="time"
-                                name="time_end"
-                                value={timeEnd}
-                                onChange={(e) => setTimeEnd(e.target.value)}
-                                errors={errors.time_end}
-                                required
-                            />
-                        </div>
+                        <FloatingLabelInput
+                            label="Start Time"
+                            type="time"
+                            name="time_start"
+                            value={timeStart}
+                            onChange={(e) => setTimeStart(e.target.value)}
+                            errors={errors.time_start}
+                            required
+                        />
 
-                        <div>
-                            <FloatingLabelInput
-                                label="Requested By"
-                                type="text"
-                                name="requested_by"
-                                value={requestedBy}
-                                onChange={(e) => setRequestedBy(e.target.value)}
-                                errors={errors.requested_by}
-                                required
-                            />
-                        </div>
+                        <FloatingLabelInput
+                            label="End Time"
+                            type="time"
+                            name="time_end"
+                            value={timeEnd}
+                            onChange={(e) => setTimeEnd(e.target.value)}
+                            errors={errors.time_end}
+                            required
+                        />
+                    </div>
+                </div>
 
-                        <div>
-                            <FloatingLabelInput
-                                label="Telephone Number"
-                                type="text"
-                                name="telephone_number"
-                                value={telephoneNumber}
-                                onChange={(e) => setTelephoneNumber(e.target.value)}
-                                errors={errors.telephone_number}
-                            />
-                        </div>
+                {/* Contact Information */}
+                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5">
+                    <div className="mb-5 flex items-center gap-2">
+                        <User size={18} className="text-emerald-400" />
+                        <h2 className="font-semibold text-white">Contact Information</h2>
+                    </div>
 
-                        <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FloatingLabelInput
+                            label="Requested By"
+                            type="text"
+                            name="requested_by"
+                            value={requestedBy}
+                            onChange={(e) => setRequestedBy(e.target.value)}
+                            errors={errors.requested_by}
+                            required
+                        />
+
+                        <FloatingLabelInput
+                            label="Telephone Number"
+                            type="text"
+                            name="telephone_number"
+                            value={telephoneNumber}
+                            onChange={(e) => setTelephoneNumber(e.target.value)}
+                            errors={errors.telephone_number}
+                        />
+
+                        <div className="md:col-span-2">
                             <FloatingLabelInput
                                 label="Email"
                                 type="email"
@@ -346,8 +323,40 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
                                 required
                             />
                         </div>
+                    </div>
+                </div>
 
-                        <div>
+                {/* Venue & Assignment */}
+                <div className="rounded-2xl border border-white/5 bg-slate-900/40 p-5">
+                    <div className="mb-5 flex items-center gap-2">
+                        <MapPin size={18} className="text-amber-400" />
+                        <h2 className="font-semibold text-white">Venue & Assignment</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <FloatingLabelSelect
+                            label="Venue"
+                            name="venue_id"
+                            value={venueId}
+                            onChange={(e) => setVenueId(e.target.value)}
+                            errors={errors.venue_id}
+                        >
+                            {loadingVenues ? (
+                                <option value="">Loading...</option>
+                            ) : (
+                                <>
+                                    <option value="">Select Venue</option>
+                                    {venues.map((v, i) => (
+                                        <option key={i} value={v.venue_id}>
+                                            {v.venue_name}
+                                        </option>
+                                    ))}
+                                </>
+                            )}
+                        </FloatingLabelSelect>
+
+                        {isSuperAdmin && (
                             <FloatingLabelSelect
                                 label="User"
                                 name="user_id"
@@ -355,110 +364,63 @@ const EditEventFormModal: FC<EditEventFormModalProps> = ({
                                 onChange={(e) => setUserId(e.target.value)}
                                 errors={errors.user_id}
                             >
-
                                 {loadingUsers ? (
                                     <option value="">Loading...</option>
                                 ) : (
                                     <>
                                         <option value="">Select User</option>
-
-                                        {users.map((user, index) => (
-                                            <option
-                                                value={user.user_id}
-                                                key={index}
-                                            >
-                                                {user.first_name} {user.last_name}
+                                        {users.map((u, i) => (
+                                            <option key={i} value={u.user_id}>
+                                                {u.first_name} {u.last_name}
                                             </option>
                                         ))}
                                     </>
                                 )}
-
                             </FloatingLabelSelect>
-                        </div>
-
-                        <div>
-                            <FloatingLabelSelect
-                                label="Venue"
-                                name="venue_id"
-                                value={venueId}
-                                onChange={(e) => setVenueId(e.target.value)}
-                                errors={errors.venue_id}
-                            >
-
-                                {loadingVenues ? (
-                                    <option value="">Loading...</option>
-                                ) : (
-                                    <>
-                                        <option value="">Select Venue</option>
-
-                                        {venues.map((venue, index) => (
-                                            <option
-                                                value={venue.venue_id}
-                                                key={index}
-                                            >
-                                                {venue.venue_name}
-                                            </option>
-                                        ))}
-                                    </>
-                                )}
-
-                            </FloatingLabelSelect>
-                        </div>
-
-                        <div>
-                            <FloatingLabelSelect
-                                label="Department"
-                                name="department_id"
-                                value={departmentId}
-                                onChange={(e) => setDepartmentId(e.target.value)}
-                                errors={errors.department_id}
-                            >
-
-                                {loadingDepartments ? (
-                                    <option value="">Loading...</option>
-                                ) : (
-                                    <>
-                                        <option value="">
-                                            Select Department
-                                        </option>
-
-                                        {departments.map((department, index) => (
-                                            <option
-                                                value={department.department_id}
-                                                key={index}
-                                            >
-                                                {department.department_name}
-                                            </option>
-                                        ))}
-                                    </>
-                                )}
-
-                            </FloatingLabelSelect>
-                        </div>
-
-                    </div>
-
-                    <div className="flex justify-end gap-4">
-
-                        {!loadingUpdate && (
-                            <CloseButton
-                                label="Close"
-                                onClose={onClose}
-                            />
                         )}
 
-                        <SubmitButton
-                            label="Update Event"
-                            loading={loadingUpdate}
-                            loadingLabel="Updating Event..."
-                        />
+                        {isSuperAdmin && (
+                            <div className="md:col-span-2">
+                                <FloatingLabelSelect
+                                    label="Department"
+                                    name="department_id"
+                                    value={departmentId}
+                                    onChange={(e) => setDepartmentId(e.target.value)}
+                                    errors={errors.department_id}
+                                >
+                                    {loadingDepartments ? (
+                                        <option value="">Loading...</option>
+                                    ) : (
+                                        <>
+                                            <option value="">Select Department</option>
+                                            {departments.map((d, i) => (
+                                                <option key={i} value={d.department_id}>
+                                                    {d.department_name}
+                                                </option>
+                                            ))}
+                                        </>
+                                    )}
+                                </FloatingLabelSelect>
+                            </div>
+                        )}
 
                     </div>
+                </div>
 
-                </form>
+                {/* Footer */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                    {!loadingUpdate && (
+                        <CloseButton label="Cancel" onClose={onClose} />
+                    )}
+                    <SubmitButton
+                        label="Update Booking"
+                        loading={loadingUpdate}
+                        loadingLabel="Updating..."
+                    />
+                </div>
 
-            </Modal>
-        </>
+            </form>
+        </Modal>
     )
 }
 

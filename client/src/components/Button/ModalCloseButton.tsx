@@ -10,7 +10,9 @@ const ModalCloseButton: FC<ModalCloseButtonProps> = ({ onClose }) => {
             type="button"
             onClick={onClose}
             className="absolute right-4 top-4 z-999 flex h-9.5 w-9.5 items-center
-            justify-center rounded-full bg-white text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-700
+            justify-center rounded-full bg-white
+                    hover:bg-gray-200
+                    border border-gray-200
             sm:w-11 cursor-pointer">
             <svg
                 width="24"

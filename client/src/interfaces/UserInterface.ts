@@ -8,9 +8,10 @@ export interface UserColumns {
     middle_name?: string;
     last_name: string;
     suffix_name?: string;
+    profile_photo?: string | null; 
+    status: string;
     role: RoleColumns;
     department: DepartmentsColumns;
-    status: string;
     email: string;
     username: string;
     password: string;
@@ -27,7 +28,6 @@ export interface UserFieldErrors {
     email?: string[];
     role?: string[];
     department?: string[];
-    status?: string[];
     username?: string[];
     password?: string[];
     password_confirmation?: string[];

@@ -1,16 +1,29 @@
-import { useEffect, useState, type FC, type FormEvent } from "react"
-import CloseButton from "../../../components/Button/CloseButton"
-import SubmitButton from "../../../components/Button/SubmitButton"
-import Modal from "../../../components/Modal"
-import type { EventColumns } from "../../../interfaces/EventInterface"
-import EventService from "../../../services/EventService"
+import { useEffect, useState, type FC, type FormEvent } from "react";
+import Modal from "../../../components/Modal";
+import CloseButton from "../../../components/Button/CloseButton";
+import SubmitButton from "../../../components/Button/SubmitButton";
+import type { EventColumns } from "../../../interfaces/EventInterface";
+import EventService from "../../../services/EventService";
+import {
+    Trash2,
+    Calendar,
+    Clock,
+    MapPin,
+    User,
+    Mail,
+    Phone,
+    Building2,
+    FileText,
+    CalendarDays,
+    AlertTriangle,
+} from "lucide-react";
 
 interface DeleteEventFormModalProps {
-    event: EventColumns | null
-    onDeleteEvent: (message: string) => void
-    refreshKey: () => void
-    isOpen: boolean
-    onClose: () => void
+    event: EventColumns | null;
+    onDeleteEvent: (message: string) => void;
+    refreshKey: () => void;
+    isOpen: boolean;
+    onClose: () => void;
 }
 
 const DeleteEventFormModal: FC<DeleteEventFormModalProps> = ({
@@ -20,230 +33,194 @@ const DeleteEventFormModal: FC<DeleteEventFormModalProps> = ({
     isOpen,
     onClose,
 }) => {
+    const [loadingDestroy, setLoadingDestroy] = useState(false);
 
-    const [loadingDestroy, setLoadingDestroy] = useState(false)
+    const [activityTitle, setActivityTitle] = useState("");
+    const [activityDescription, setActivityDescription] = useState("");
+    const [date, setDate] = useState("");
+    const [numberOfDays, setNumberOfDays] = useState<number>(1);
+    const [timeStart, setTimeStart] = useState("");
+    const [timeEnd, setTimeEnd] = useState("");
+    const [requestedBy, setRequestedBy] = useState("");
+    const [telephoneNumber, setTelephoneNumber] = useState("");
+    const [email, setEmail] = useState("");
+    const [user, setUser] = useState("");
+    const [venue, setVenue] = useState("");
+    const [department, setDepartment] = useState("");
 
-    const [activityTitle, setActivityTitle] = useState("")
-    const [activityDescription, setActivityDescription] = useState("")
-    const [date, setDate] = useState("")
-    const [numberOfDays, setNumberOfDays] = useState<number>(1)
-    const [timeStart, setTimeStart] = useState("")
-    const [timeEnd, setTimeEnd] = useState("")
-    const [requestedBy, setRequestedBy] = useState("")
-    const [telephoneNumber, setTelephoneNumber] = useState("")
-    const [email, setEmail] = useState("")
-    const [user, setUser] = useState("")
-    const [venue, setVenue] = useState("")
-    const [department, setDepartment] = useState("")
+    const formatTime = (time: string) =>
+        new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+        });
 
     const handleDestroyEvent = async (e: FormEvent) => {
+        e.preventDefault();
         try {
-            e.preventDefault()
-
-            setLoadingDestroy(true)
-
-            const res = await EventService.destroyEvent(event?.event_id!)
-
+            setLoadingDestroy(true);
+            const res = await EventService.destroyEvent(event?.event_id!);
             if (res.status === 200) {
-                onDeleteEvent(res.data.message)
-
-                refreshKey()
-                onClose()
+                onDeleteEvent(res.data.message);
+                refreshKey();
+                onClose();
             } else {
-                console.error(
-                    "Unexpected error occured during deleting event: ",
-                    res.status
-                )
+                console.error("Unexpected error during deleting event:", res.status);
             }
         } catch (error) {
-            console.error(
-                "Unexpected server error occured during deleting event: ",
-                error
-            )
+            console.error("Unexpected server error during deleting event:", error);
         } finally {
-            setLoadingDestroy(false)
+            setLoadingDestroy(false);
         }
-    }
+    };
 
     useEffect(() => {
         if (event) {
-            setActivityTitle(event.activity_title)
-            setActivityDescription(event.activity_description ?? "")
-            setDate(event.date)
-            setNumberOfDays(event.number_of_days)
-            setTimeStart(event.time_start)
-            setTimeEnd(event.time_end)
-            setRequestedBy(event.requested_by)
-            setTelephoneNumber(event.telephone_number ?? "")
-            setEmail(event.email)
-
-            setUser(
-                `${event.user.first_name} ${event.user.last_name}`
-            )
-
-            setVenue(event.venue.venue_name)
-
-            setDepartment(event.department.department_name)
+            setActivityTitle(event.activity_title);
+            setActivityDescription(event.activity_description ?? "");
+            setDate(event.date);
+            setNumberOfDays(event.number_of_days);
+            setTimeStart(event.time_start);
+            setTimeEnd(event.time_end);
+            setRequestedBy(event.requested_by);
+            setTelephoneNumber(event.telephone_number ?? "");
+            setEmail(event.email);
+            setUser(`${event.user.first_name} ${event.user.last_name}`);
+            setVenue(event.venue.venue_name);
+            setDepartment(event.department.department_name);
         } else {
-            console.error(
-                "Unexpected event error occured during getting event details: ",
-                event
-            )
+            console.error("Unexpected event error during getting event details:", event);
         }
-    }, [event])
+    }, [event]);
 
     return (
-        <>
-            <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
-                <form onSubmit={handleDestroyEvent}>
-                    <div className="border-b border-gray-200 dark:border-gray-700 pb-4 mb-6 px-1">
-                        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">
-                            Delete Event Form
-                        </h1>
-                    </div>
+        <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
+            <form onSubmit={handleDestroyEvent} className="space-y-6">
 
-                    <div className="grid grid-cols-2 gap-4 border-b border-b-gray-100 mb-4">
+                {/* Header */}
+                <div className="relative overflow-hidden rounded-3xl border border-red-500/20 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-6">
+                    <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-red-500/10 blur-3xl" />
+                    <div className="absolute left-0 bottom-0 h-40 w-40 rounded-full bg-orange-500/10 blur-3xl" />
 
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Activity Title
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {activityTitle}
-                            </p>
+                    <div className="relative flex items-center gap-4">
+                        <div className="rounded-2xl bg-red-500/10 p-3">
+                            <Trash2 className="h-6 w-6 text-red-400" />
                         </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Activity Description
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {activityDescription || "N/A"}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Date
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {date}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Number of Days
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {numberOfDays}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Time Start
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {timeStart}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Time End
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {timeEnd}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Requested By
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {requestedBy}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Telephone Number
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {telephoneNumber || "N/A"}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Email
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {email}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                User
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {user}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Venue
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {venue}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <label className="text-black font-medium mb-2">
-                                Department
-                            </label>
-
-                            <p className="text-gray-500 font-medium">
-                                {department}
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Delete Event</h1>
+                            <p className="text-sm text-gray-400 mt-1">
+                                This action cannot be undone.
                             </p>
                         </div>
                     </div>
+                </div>
 
-                    <div className="flex justify-end gap-4">
-                        {!loadingDestroy && (
-                            <CloseButton
-                                label="Close"
-                                onClose={onClose}
+                {/* Activity Details */}
+                <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-5 backdrop-blur-xl">
+                    <div className="mb-4 flex items-center gap-2">
+                        <FileText size={18} className="text-cyan-400" />
+                        <h3 className="font-semibold text-white">Activity Details</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Activity Title</p>
+                            <p className="mt-1 text-sm font-medium text-white">{activityTitle || "—"}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Description</p>
+                            <p className="mt-1 text-sm font-medium text-white">{activityDescription || "—"}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Schedule & Venue */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-5">
+                        <div className="mb-4 flex items-center gap-2">
+                            <Calendar size={18} className="text-blue-400" />
+                            <h3 className="font-semibold text-white">Schedule</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <InfoRow label="Date" value={date} icon={<CalendarDays size={14} />} />
+                            <InfoRow label="Duration" value={`${numberOfDays} day(s)`} icon={<CalendarDays size={14} />} />
+                            <InfoRow
+                                label="Time"
+                                value={timeStart && timeEnd ? `${formatTime(timeStart)} – ${formatTime(timeEnd)}` : "—"}
+                                icon={<Clock size={14} />}
                             />
-                        )}
-
-                        <SubmitButton
-                            className="bg-red-600 hover:bg-red-700"
-                            label="Delete Event"
-                            loading={loadingDestroy}
-                            loadingLabel="Deleting Event..."
-                        />
+                        </div>
                     </div>
-                </form>
-            </Modal>
-        </>
-    )
-}
 
-export default DeleteEventFormModal
+                    <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-5">
+                        <div className="mb-4 flex items-center gap-2">
+                            <MapPin size={18} className="text-emerald-400" />
+                            <h3 className="font-semibold text-white">Venue</h3>
+                        </div>
+                        <div className="space-y-3">
+                            <InfoRow label="Location" value={venue} icon={<MapPin size={14} />} />
+                            <InfoRow label="Department" value={department} icon={<Building2 size={14} />} />
+                            <InfoRow label="Submitted By" value={user} icon={<User size={14} />} />
+                        </div>
+                    </div>
+
+                </div>
+
+                {/* Person in Charge */}
+                <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-5">
+                    <div className="mb-4 flex items-center gap-2">
+                        <User size={18} className="text-amber-400" />
+                        <h3 className="font-semibold text-white">Person in Charge</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <InfoRow label="Requested By" value={requestedBy} icon={<User size={14} />} />
+                        <InfoRow label="Email" value={email} icon={<Mail size={14} />} />
+                        <InfoRow label="Telephone" value={telephoneNumber || "—"} icon={<Phone size={14} />} />
+                    </div>
+                </div>
+
+                {/* Warning */}
+                <div className="flex items-start gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                    <AlertTriangle size={18} className="text-red-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-red-200">
+                        Deleting this event will permanently remove it and all related data. This cannot be recovered.
+                    </p>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                    {!loadingDestroy && (
+                        <CloseButton label="Cancel" onClose={onClose} />
+                    )}
+                    <SubmitButton
+                        className="rounded-xl bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-500/20 border border-red-500/20 transition"
+                        label="Delete Event"
+                        loading={loadingDestroy}
+                        loadingLabel="Deleting Event..."
+                    />
+                </div>
+
+            </form>
+        </Modal>
+    );
+};
+
+export default DeleteEventFormModal;
+
+/* ---------- Info Row ---------- */
+const InfoRow = ({
+    label,
+    value,
+    icon,
+}: {
+    label: string;
+    value: string;
+    icon?: React.ReactNode;
+}) => (
+    <div className="flex items-start gap-2">
+        <div className="text-gray-500 mt-0.5 flex-shrink-0">{icon}</div>
+        <div className="min-w-0">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">{label}</p>
+            <p className="mt-0.5 text-sm font-medium text-white truncate">{value || "—"}</p>
+        </div>
+    </div>
+);

@@ -76,29 +76,78 @@ const EditDepartmentForm: FC<EditDepartmentFormProps> = ({ onDepartmentUpdated }
             console.error('Unexpected parameter error occured during getting: ', department_id)
         }
     }, [department_id]);
-    return (
-        <>
+        return (
+        <div className="max-w-2xl mx-auto">
+
+            {/* Loading State */}
             {loadingGet ? (
-                <div className="flex justify-center items-center mt-52">
+                <div className="flex justify-center items-center py-20">
                     <Spinner size="lg" />
                 </div>
             ) : (
-                <form onSubmit={handleUpdateDepartment}>
-                    <div className="mb-4">
-                        <FloatingLabelInput label="Department" type="text" name="department" value={department} onChange={(e) => setDepartment(e.target.value)} required autoFocus errors={errors.department_name} />
-                    </div>
-                    <div className="mb-4">
-                        <FloatingLabelInput label="Description" type="text" name="description" value={description} onChange={(e) => setDescription(e.target.value)} />
-                    </div>
-                    <div className="flex justify-end gap-4">
-                        {!loadingUpdate && <BackButton label="Back" path="/departments" />}
-                        <SubmitButton label="Update Department" loading={loadingUpdate} loadingLabel="Updating Department..." />
-                    </div>
-                </form>
-            )}
+                <div className="bg-gray-900 border border-gray-800 rounded-xl shadow-lg overflow-hidden">
 
-        </>
-    )
+                    {/* Header */}
+                    <div className="border-b border-gray-800 p-6">
+                        <h2 className="text-xl font-semibold text-white">
+                            Edit Department
+                        </h2>
+                        <p className="text-sm text-gray-400 mt-1">
+                            Update department information below
+                        </p>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleUpdateDepartment} className="p-6 space-y-5">
+
+                        {/* Department Name */}
+                        <div>
+                            <FloatingLabelInput
+                                label="Department"
+                                type="text"
+                                name="department"
+                                value={department}
+                                onChange={(e) => setDepartment(e.target.value)}
+                                required
+                                autoFocus
+                                errors={errors.department_name}
+                            />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <FloatingLabelInput
+                                label="Description"
+                                type="text"
+                                name="description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex justify-end gap-4 pt-2 border-t border-gray-800">
+
+                            <BackButton
+                                label="Back"
+                                path="/departments"
+                            />
+
+                            <SubmitButton
+                                label="Update Department"
+                                loading={loadingUpdate}
+                                loadingLabel="Updating..."
+                                className="`px-4 py-3 rounded-lg bg-emerald-500/10 text-sm font-medium text-emerald-400 hover:bg-emerald-500/20
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+
+                        </div>
+
+                    </form>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default EditDepartmentForm;

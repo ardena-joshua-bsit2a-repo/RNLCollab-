@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useHeader } from "../contexts/HeaderContext";
 import { useSidebar } from "../contexts/SidebarContext";
 import { getUserDisplayName, useAuth } from "../contexts/AuthContext";
+import { FiMenu, FiLogOut, FiUser, FiChevronDown } from "react-icons/fi";
+import NotificationBell from "../pages/NotificationBell/components/NotificationBell";
 
 const AppHeader = () => {
     const { isOpen, toggleUserMenu } = useHeader();
@@ -14,114 +16,133 @@ const AppHeader = () => {
         navigate("/login", { replace: true });
     };
 
+    const initials =
+        getUserDisplayName(user)
+            ?.split(" ")
+            .map((n) => n[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2) || "U";
+
+    const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
+
+    // Reusable avatar components
+    const SmallAvatar = () => user?.profile_photo ? (
+        <img
+            src={`${backendUrl}${user.profile_photo}`}
+            alt="Avatar"
+            className="h-9 w-9 rounded-full object-cover border border-slate-700 shrink-0"
+        />
+    ) : (
+        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-semibold text-sm shrink-0">
+            {initials}
+        </div>
+    );
+
+    const LargeAvatar = () => user?.profile_photo ? (
+        <img
+            src={`${backendUrl}${user.profile_photo}`}
+            alt="Avatar"
+            className="h-11 w-11 rounded-full object-cover border border-slate-700 shrink-0"
+        />
+    ) : (
+        <div className="h-11 w-11 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold shrink-0">
+            {initials}
+        </div>
+    );
+
     return (
         <>
             {isOpen && (
-                <div className="fixed inset-0 z-40"
-                    onClick={toggleUserMenu}
-                />
+                <div className="fixed inset-0 z-40" onClick={toggleUserMenu} />
             )}
-            <nav className="fixed top-0 z-50 w-full bg-gray-950 border-b border-default">
-                <div className="px-3 py-3 lg:px-5 lg:pl-3">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center justify-start rtl:justify-end">
+
+            <header className="fixed top-0 left-0 right-0 z-50 h-[73px] bg-slate-950/90 backdrop-blur-xl border-b border-slate-800">
+                <div className="h-full px-4 lg:px-6">
+                    <div className="flex items-center justify-between h-full">
+
+                        {/* ── Left ── */}
+                        <div className="flex items-center gap-3">
                             <button
-                                data-drawer-target="top-bar-sidebar"
-                                data-drawer-toggle="top-bar-sidebar"
-                                aria-controls="top-bar-sidebar"
-                                type="button"
                                 onClick={toggleSidebar}
-                                className="sm:hidden text-heading bg-transparent box-border border border-transparent hover:bg-neutral-secondary-medium focus:ring-4 focus:ring-neutral-tertiary font-medium leading-5 rounded-base text-sm p-2 focus:outline-none"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                                aria-label="Toggle sidebar"
                             >
-                                <span className="sr-only">Open sidebar</span>
-                                <svg
-                                    className="w-6 h-6"
-                                    aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        stroke="currentColor"
-                                        stroke-linecap="round"
-                                        stroke-width="2"
-                                        d="M5 7h14M5 12h14M5 17h10"
-                                    />
-                                </svg>
+                                <FiMenu size={20} />
                             </button>
-                            {/* <a href="https://flowbite.com" className="flex ms-2 md:me-24">
-                                <img src="https://flowbite.com/docs/images/logo.svg" className="h-6 me-3" alt="FlowBite Logo" />
-                                <span className="self-center text-lg text-white font-semibold whitespace-nowrap dark:text-white">FilSched</span>
-                            </a> */}
-                            <span className="self-center text-lg text-white font-semibold whitespace-nowrap dark:text-white">FilSched</span>
-                        </div>
-                        <div className="flex items-center">
-                            <div className="flex items-center ms-3">
-                                <div>
-                                    <button
-                                        type="button"
-                                        onClick={toggleUserMenu}
-                                        className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 
-                                    dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
-                                        <span
-                                            className="sr-only"
-                                        >
-                                            Open user menu
-                                        </span>
-                                        <img
-                                            className="w-8 h-8 rounded-full"
-                                            src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                                            alt="user photo"
-                                        />
-                                    </button>
+                            <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                    F
                                 </div>
-                                <div className={`absolute right-8 top-9 min-w-50 z-50
-                                ${isOpen
-                                        ? "block"
-                                        : "hidden"
-                                    }  
-                                bg-gray-900 text-blue-100 border border-default-medium rounded-base shadow-lg w-44`
-                                }
-                                    id="dropdown-user">
-                                    <div className="px-4 py-3 border-b border-default-medium" role="none">
-                                        <p className="text-sm font-medium text-heading" role="none">
-                                            {getUserDisplayName(user) || "User"}
-                                        </p>
-                                        <p className="text-sm text-body truncate" role="none">
-                                            {user?.role?.role_name ?? "—"} · {user?.email ?? ""}
-                                        </p>
+                                <div className="hidden sm:block">
+                                    <h1 className="text-white font-bold text-base leading-none">FilSched</h1>
+                                    <p className="text-[11px] text-slate-400 mt-0.5">Event Management System</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Right ── */}
+                        <div className="flex items-center gap-2">
+
+                            <NotificationBell />
+
+                            {/* User menu */}
+                            <div className="relative z-50">
+                                <button
+                                    onClick={toggleUserMenu}
+                                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-slate-800 transition"
+                                >
+                                    {/* Small avatar in header button */}
+                                    <SmallAvatar />
+                                    <div className="hidden md:block text-left">
+                                        <p className="text-sm font-medium text-white leading-none">{getUserDisplayName(user) || "User"}</p>
+                                        <p className="text-[11px] text-slate-400 mt-0.5">{user?.role?.role_name || "User"}</p>
                                     </div>
-                                    <ul className="p-2 text-sm text-body font-medium " role="none">
-                                        {/* <li>
-                                            <a href="#" className="inline-flex items-center w-full p-2 rounded-lg hover:bg-linear-to-r from-blue-100 to-blue-900 hover:text-black hover:text-heading" role="menuitem">Dashboard</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" className="inline-flex items-center w-full p-2 rounded-lg hover:bg-blue-500/50 hover:text-heading" role="menuitem">Settings</a>
-                                        </li>
-                                        <li>
-                                            <a href="#" className="inline-flex items-center w-full p-2 rounded-lg hover:bg-blue-500/50 hover:text-heading" role="menuitem">Earnings</a>
-                                        </li> */}
-                                        <li>
-                                            <button
-                                                type="button"
-                                                onClick={handleSignOut}
-                                                className="inline-flex items-center w-full p-2 rounded-lg hover:bg-blue-500/50 hover:text-heading text-left"
-                                                role="menuitem"
-                                            >
-                                                Sign out
-                                            </button>
-                                        </li>
-                                    </ul>
+                                    <FiChevronDown
+                                        size={14}
+                                        className={`text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                                    />
+                                </button>
+
+                                {/* Dropdown */}
+                                <div className={`
+                                    absolute right-0 top-[52px] w-72
+                                    rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl
+                                    transition-all duration-200
+                                    ${isOpen ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-2 invisible"}
+                                `}>
+                                    <div className="p-4 border-b border-slate-800">
+                                        <div className="flex items-center gap-3">
+                                            {/* Large avatar in dropdown */}
+                                            <LargeAvatar />
+                                            <div>
+                                                <p className="font-medium text-white text-sm">{getUserDisplayName(user)}</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="p-2">
+                                        <button
+                                            onClick={() => { navigate("/profile"); toggleUserMenu(); }}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-slate-800 transition"
+                                        >
+                                            <FiUser size={15} /> Profile
+                                        </button>
+                                        <button
+                                            onClick={handleSignOut}
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition"
+                                        >
+                                            <FiLogOut size={15} /> Sign Out
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </nav>
+            </header>
         </>
-    )
-}
+    );
+};
 
-export default AppHeader
+export default AppHeader;

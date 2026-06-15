@@ -13,7 +13,12 @@ const CloseButton: FC<CloseButtonProps> = ({ label, onClose, newClassName, class
             <button type="submit" className={`
             ${newClassName
                     ? newClassName
-                    : `px-4 py-3 bg-gray-400 hover:bg-gray-500 hover:border-gray-200  font-medium cursor-pointer rounded-lg shadow-lg 
+                    : `px-4 py-3 bg-white dark:bg-gray-800
+                    hover:bg-gray-200 dark:hover:bg-gray-700
+                    border border-gray-200 dark:border-gray-700
+                    text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white
+                    font-medium cursor-pointer rounded-lg shadow-lg
+                    transition-colors duration-200 text-sm 
                 ${className}`
                 }`}
                 onClick={onClose}

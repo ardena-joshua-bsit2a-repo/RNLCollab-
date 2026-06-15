@@ -22,7 +22,7 @@ const SubmitButton: FC<SubmitButtonProps> = ({
             <button type="submit" className={`
             ${newClassName
                     ? newClassName
-                    : `px-4 py-3 bg-green-500 hover:bg-green-800 hover:border-gray-200 text-white font-medium cursor-pointer rounded-lg shadow-lg 
+                    : `px-4 py-3 rounded-lg bg-emerald-500/10 text-sm font-medium text-emerald-400 hover:bg-emerald-500/20
                     disabled:opacity-50 disabled:cursor-not-allowed
                 ${className}`
                 }`}

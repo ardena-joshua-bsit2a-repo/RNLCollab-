@@ -1,301 +1,544 @@
 import { useEffect, useState, type FC } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow
+    Table,
+    TableBody,
+    TableCell,
+    TableHeader,
+    TableRow
 } from "../../../components/Table";
+
 import Spinner from "../../../components/Spinner/Spinner";
 import UserService from "../../../services/UserService";
-import type { UserColumns } from "../../../interfaces/UserInterface";
+
+import type { UserColumns }
+from "../../../interfaces/UserInterface";
+
+import {
+    Archive,
+    RefreshCw,
+    Search,
+    Trash2,
+    RotateCcw,
+    Users
+} from "lucide-react";
 
 interface TrashUserListProps {
-  refreshKey: boolean;
-  onRestoreUser: (message: string) => void;
-  onPermanentDelete: (message: string) => void;
+    refreshKey: boolean;
+    onRestoreUser: (message: string) => void;
+    onPermanentDelete: (message: string) => void;
 }
+
 const TrashUserList: FC<TrashUserListProps> = ({
-  refreshKey,
-  onRestoreUser,
-  onPermanentDelete
+    refreshKey,
+    onRestoreUser,
+    onPermanentDelete
 }) => {
 
-  const [loadingUsers, setLoadingUsers] =
-    useState(false);
+    const [loadingUsers, setLoadingUsers] =
+        useState(false);
 
-  const [users, setUsers] =
-    useState<UserColumns[]>([]);
+    const [users, setUsers] =
+        useState<UserColumns[]>([]);
 
-  const handleLoadTrashUsers = async () => {
-    try {
+    const [search, setSearch] =
+        useState("");
 
-      setLoadingUsers(true);
+    const handleLoadTrashUsers = async () => {
 
-      const res =
-        await UserService.loadTrashUsers();
+        try {
 
-      if (res.status === 200) {
-        setUsers(res.data.users);
-      }
+            setLoadingUsers(true);
 
-    } catch (error) {
+            const res =
+                await UserService.loadTrashUsers();
 
-      console.error(
-        "Error loading trash users:",
-        error
-      );
+            if (res.status === 200) {
+                setUsers(res.data.users);
+            }
 
-    } finally {
+        } catch (error) {
 
-      setLoadingUsers(false);
+            console.error(
+                "Error loading trash users:",
+                error
+            );
 
-    }
-  };
+        } finally {
 
-  const handleRestoreUser = async (
-    userId: number
-  ) => {
+            setLoadingUsers(false);
 
-    try {
+        }
+    };
 
-      const res =
-        await UserService.restoreUser(
-          userId
-        );
+    const handleRestoreUser = async (
+        userId: number
+    ) => {
 
-      if (res.status === 200) {
+        try {
 
-        onRestoreUser(
-          res.data.message
-        );
+            const res =
+                await UserService.restoreUser(
+                    userId
+                );
+
+            if (res.status === 200) {
+
+                onRestoreUser(
+                    res.data.message
+                );
+
+                handleLoadTrashUsers();
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Error restoring user:",
+                error
+            );
+        }
+    };
+
+    const handlePermanentDelete = async (
+        userId: number
+    ) => {
+
+        const confirmDelete =
+            window.confirm(
+                "Are you sure you want to permanently delete this user?"
+            );
+
+        if (!confirmDelete) return;
+
+        try {
+
+            const res =
+                await UserService.forceDeleteUser(
+                    userId
+                );
+
+            if (res.status === 200) {
+
+                onPermanentDelete(
+                    res.data.message
+                );
+
+                handleLoadTrashUsers();
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Error permanently deleting user:",
+                error
+            );
+        }
+    };
+
+    useEffect(() => {
 
         handleLoadTrashUsers();
-      }
 
-    } catch (error) {
+    }, [refreshKey]);
 
-      console.error(
-        "Error restoring user:",
-        error
-      );
+    const handleUserFullNameFormat = (
+        user: UserColumns
+    ) => {
 
-    }
-  };
+        let fullName = user.middle_name
+            ? `${user.last_name}, ${user.first_name} ${user.middle_name.charAt(0)}.`
+            : `${user.last_name}, ${user.first_name}`;
 
-  const handlePermanentDelete = async (
-    userId: number
-  ) => {
+        if (user.suffix_name) {
+            fullName += ` ${user.suffix_name}`;
+        }
 
-    const confirmDelete =
-      window.confirm(
-        "Are you sure you want to permanently delete this user?"
-      );
+        return fullName;
+    };
 
-    if (!confirmDelete) return;
+    const handleUserInitials = (
+        user: UserColumns
+    ) => {
 
-    try {
+        return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`
+            .toUpperCase();
+    };
 
-      const res =
-        await UserService.forceDeleteUser(
-          userId
-        );
+    const getProfilePhotoUrl = (
+        path: string
+    ) => {
 
-      if (res.status === 200) {
+        if (path.startsWith("http")) {
+            return path;
+        }
 
-        onPermanentDelete(
-          res.data.message
-        );
+        return `${import.meta.env.VITE_BACKEND_URL}${path}`;
+    };
 
-        handleLoadTrashUsers();
-      }
+    const filteredUsers =
+        users.filter((user) => {
 
-    } catch (error) {
+            const fullName =
+                handleUserFullNameFormat(user)
+                    .toLowerCase();
 
-      console.error(
-        "Error deleting user permanently:",
-        error
-      );
+            return (
+                fullName.includes(
+                    search.toLowerCase()
+                ) ||
+                user.email
+                    .toLowerCase()
+                    .includes(
+                        search.toLowerCase()
+                    ) ||
+                user.username
+                    .toLowerCase()
+                    .includes(
+                        search.toLowerCase()
+                    )
+            );
+        });
 
-    }
-  };
+    return (
 
-  const handleUserFullNameFormat = (
-    user: UserColumns
-  ) => {
+        <div className="space-y-6">
 
-    let fullName = "";
+            {/* HERO */}
 
-    if (user.middle_name) {
-      fullName =
-        `${user.last_name}, ${user.first_name} ${user.middle_name.charAt(0)}.`;
-    } else {
-      fullName =
-        `${user.last_name}, ${user.first_name}`;
-    }
+            <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8">
 
-    if (user.suffix_name) {
-      fullName += ` ${user.suffix_name}`;
-    }
+                <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-red-500/10 blur-3xl" />
 
-    return fullName;
-  };
+                <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-orange-500/10 blur-3xl" />
 
-  useEffect(() => {
+                <div className="relative flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 
-    handleLoadTrashUsers();
+                    <div className="flex items-center gap-4">
 
-  }, [refreshKey]);
+                        <div className="rounded-2xl bg-red-500/10 p-3">
 
-  return (
-    <>
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <Archive className="h-6 w-6 text-red-400" />
 
-        <div className="max-w-full max-h-[calc(100vh)] overflow-x-auto">
+                        </div>
 
-          <Table>
+                        <div>
 
-            <caption className="mb-4">
+                            <h1 className="text-4xl font-bold text-white">
+                                Trash Users
+                            </h1>
 
-              <div className="border-b border-gray-100 p-4">
+                            <p className="mt-1 text-gray-400">
+                                Restore deleted users or permanently remove them.
+                            </p>
 
-                <h2 className="text-lg font-semibold text-gray-700">
-                  Deleted Users
-                </h2>
+                        </div>
 
-              </div>
+                    </div>
 
-            </caption>
+                    <button
+                        onClick={handleLoadTrashUsers}
+                        className="
+                            flex items-center gap-2
+                            rounded-2xl
+                            bg-blue-600
+                            px-5 py-3
+                            text-sm font-medium
+                            text-white
+                            hover:bg-blue-500
+                        "
+                    >
+                        <RefreshCw size={16} />
+                        Refresh
+                    </button>
 
-            <TableHeader className="border-b border-gray-200 bg-gray-950 sticky top-0 text-white text-xs">
+                </div>
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                No.
-              </TableCell>
+            </div>
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                FULL NAME
-              </TableCell>
+            {/* STATS */}
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                ROLE
-              </TableCell>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                DEPARTMENT
-              </TableCell>
+                <div className="rounded-3xl border border-red-500/10 bg-red-500/5 p-5">
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                EMAIL
-              </TableCell>
+                    <p className="text-sm text-gray-400">
+                        Deleted Users
+                    </p>
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                STATUS
-              </TableCell>
+                    <div className="mt-3 flex items-center gap-3">
 
-              <TableCell isHeader className="px-5 py-3 text-center">
-                ACTIONS
-              </TableCell>
+                        <Trash2 className="text-red-400" />
 
-            </TableHeader>
+                        <span className="text-3xl font-bold text-white">
+                            {users.length}
+                        </span>
 
-            <TableBody className="divide-y divide-gray-100 text-gray-500 text-sm">
+                    </div>
 
-              {loadingUsers ? (
+                </div>
 
-                <TableRow>
+                <div className="rounded-3xl border border-cyan-500/10 bg-cyan-500/5 p-5">
 
-                  <TableCell
-                    colSpan={7}
-                    className="px-4 py-3 text-center"
-                  >
+                    <p className="text-sm text-gray-400">
+                        Filtered Results
+                    </p>
 
-                    <Spinner size="md" />
+                    <div className="mt-3 flex items-center gap-3">
 
-                  </TableCell>
+                        <Users className="text-cyan-400" />
 
-                </TableRow>
+                        <span className="text-3xl font-bold text-white">
+                            {filteredUsers.length}
+                        </span>
 
-              ) : (
+                    </div>
 
-                users.map((user, index) => (
+                </div>
 
-                  <TableRow
-                    key={user.user_id}
-                    className="hover:bg-gray-100"
-                  >
+            </div>
 
-                    <TableCell className="px-4 py-3 text-center">
-                      {index + 1}
-                    </TableCell>
+            {/* FILTER */}
 
-                    <TableCell className="px-4 py-3">
-                      {handleUserFullNameFormat(user)}
-                    </TableCell>
+            <div
+                className="
+                    flex flex-wrap items-center gap-3
+                    rounded-3xl
+                    border border-white/5
+                    bg-slate-900/60
+                    p-4
+                    backdrop-blur-xl
+                "
+            >
 
-                    <TableCell className="px-4 py-3">
-                      {user.role.role_name}
-                    </TableCell>
+                <div className="relative">
 
-                    <TableCell className="px-4 py-3">
-                      {user.department.department_name}
-                    </TableCell>
+                    <Search
+                        size={16}
+                        className="
+                            absolute left-3 top-1/2
+                            -translate-y-1/2
+                            text-gray-500
+                        "
+                    />
 
-                    <TableCell className="px-4 py-3">
-                      {user.email}
-                    </TableCell>
+                    <input
+                        type="text"
+                        placeholder="Search user..."
+                        value={search}
+                        onChange={(e) =>
+                            setSearch(e.target.value)
+                        }
+                        className="
+                            w-72
+                            rounded-2xl
+                            border border-white/10
+                            bg-black/20
+                            py-3 pl-10 pr-4
+                            text-white
+                            outline-none
+                            focus:border-blue-500
+                        "
+                    />
 
-                    <TableCell className="px-4 py-3">
-                      {user.status}
-                    </TableCell>
+                </div>
 
-                    <TableCell className="px-4 py-3">
+            </div>
 
-                      <div className="flex gap-4">
+            {/* TABLE */}
 
-                        <button
-                          type="button"
-                          className="text-green-600 hover:underline font-medium cursor-pointer"
-                          onClick={() =>
-                            handleRestoreUser(
-                              user.user_id
-                            )
-                          }
-                        >
-                          Restore
-                        </button>
+            <div className="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur-xl shadow-xl">
 
-                        <button
-                          type="button"
-                          className="text-red-600 hover:underline font-medium cursor-pointer"
-                          onClick={() =>
-                            handlePermanentDelete(
-                              user.user_id
-                            )
-                          }
-                        >
-                          Delete Permanently
-                        </button>
+                <div className="overflow-x-auto">
 
-                      </div>
+                    <Table>
 
-                    </TableCell>
+                        <TableHeader className="sticky top-0 border-b border-white/10 bg-black/50 text-xs text-gray-300">
 
-                  </TableRow>
+                            <TableRow>
 
-                ))
+                                <TableCell isHeader className="px-5 py-3 text-center">
+                                    NO.
+                                </TableCell>
 
-              )}
+                                <TableCell isHeader className="px-5 py-3 text-center">
+                                    PROFILE
+                                </TableCell>
 
-            </TableBody>
+                                <TableCell isHeader className="px-5 py-3">
+                                    FULL NAME
+                                </TableCell>
 
-          </Table>
+                                <TableCell isHeader className="px-5 py-3">
+                                    ROLE
+                                </TableCell>
+
+                                <TableCell isHeader className="px-5 py-3">
+                                    DEPARTMENT
+                                </TableCell>
+
+                                <TableCell isHeader className="px-5 py-3">
+                                    EMAIL
+                                </TableCell>
+
+                                <TableCell isHeader className="px-5 py-3 text-center">
+                                    ACTIONS
+                                </TableCell>
+
+                            </TableRow>
+
+                        </TableHeader>
+
+                        <TableBody className="divide-y divide-white/5 text-sm text-gray-300">
+
+                            {loadingUsers ? (
+
+                                <TableRow>
+
+                                    <TableCell
+                                        colSpan={7}
+                                        className="py-10 text-center"
+                                    >
+                                        <Spinner size="md" />
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ) : filteredUsers.length === 0 ? (
+
+                                <TableRow>
+
+                                    <TableCell
+                                        colSpan={7}
+                                        className="py-12 text-center text-gray-500"
+                                    >
+                                        No deleted users found.
+                                    </TableCell>
+
+                                </TableRow>
+
+                            ) : (
+
+                                filteredUsers.map(
+                                    (user, index) => (
+
+                                        <TableRow
+                                            key={user.user_id}
+                                            className="hover:bg-white/[0.03]"
+                                        >
+
+                                            <TableCell className="px-4 py-3 text-center">
+                                                {index + 1}
+                                            </TableCell>
+
+                                            <TableCell className="px-4 py-3 text-center">
+
+                                                {user.profile_photo ? (
+
+                                                    <img
+                                                        src={getProfilePhotoUrl(
+                                                            user.profile_photo
+                                                        )}
+                                                        alt="Profile"
+                                                        className="mx-auto h-10 w-10 rounded-full object-cover"
+                                                    />
+
+                                                ) : (
+
+                                                    <div className="
+                                                        mx-auto
+                                                        flex h-10 w-10
+                                                        items-center justify-center
+                                                        rounded-full
+                                                        bg-gradient-to-br
+                                                        from-blue-500
+                                                        to-cyan-500
+                                                        text-sm font-bold text-white
+                                                    ">
+                                                        {handleUserInitials(user)}
+                                                    </div>
+
+                                                )}
+
+                                            </TableCell>
+
+                                            <TableCell className="px-4 py-3">
+                                                {handleUserFullNameFormat(user)}
+                                            </TableCell>
+
+                                            <TableCell className="px-4 py-3">
+                                                {user.role?.role_name}
+                                            </TableCell>
+
+                                            <TableCell className="px-4 py-3">
+                                                {user.department?.department_name}
+                                            </TableCell>
+
+                                            <TableCell className="px-4 py-3">
+                                                {user.email}
+                                            </TableCell>
+
+                                            <TableCell className="px-4 py-3">
+
+                                                <div className="flex gap-3">
+
+                                                    <button
+                                                        onClick={() =>
+                                                            handleRestoreUser(
+                                                                user.user_id
+                                                            )
+                                                        }
+                                                        className="
+                                                            rounded-lg
+                                                            bg-emerald-500/10
+                                                            px-3 py-1.5
+                                                            text-sm font-medium
+                                                            text-emerald-400
+                                                            hover:bg-emerald-500/20
+                                                        "
+                                                    >
+                                                        Restore
+                                                    </button>
+
+                                                    <button
+                                                        onClick={() =>
+                                                            handlePermanentDelete(
+                                                                user.user_id
+                                                            )
+                                                        }
+                                                        className="
+                                                            rounded-lg
+                                                            bg-red-500/10
+                                                            px-3 py-1.5
+                                                            text-sm font-medium
+                                                            text-red-400
+                                                            hover:bg-red-500/20
+                                                        "
+                                                    >
+                                                        Delete Permanently
+                                                    </button>
+
+                                                </div>
+
+                                            </TableCell>
+
+                                        </TableRow>
+
+                                    )
+                                )
+
+                            )}
+
+                        </TableBody>
+
+                    </Table>
+
+                </div>
+
+            </div>
 
         </div>
 
-      </div>
-    </>
-  )
-}
+    );
+};
 
-export default TrashUserList
+export default TrashUserList;

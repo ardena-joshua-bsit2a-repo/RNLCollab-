@@ -41,9 +41,10 @@ const FloatingLabelSelect: FC<FloatingLabelSelectProps> = ({
                 className={
                     newSelectClassName
                         ? newSelectClassName
-                        : `block px-2.5 pb-2.5 pt-4 w-full text-sm text-heading bg-transparent rounded-lg
-                        border border-default-medium appearance-none focus:outline-none
-                        focus:ring-0 focus:border-brand peer ${selectClassName || ""}`
+                        : `block px-2.5 pb-2.5 pt-4 w-full text-sm text-white text-heading bg-transparent rounded-lg
+                            border border-default-medium appearance-none focus:outline-none
+                            focus:border-blue-400 focus:shadow-[0_0_10px_rgba(59,130,246,0.6)]
+                            [&>option]:bg-gray-900 [&>option]:text-white ${selectClassName || ""}`
                 }
                 required={required}
                 autoFocus={autoFocus}
@@ -57,11 +58,10 @@ const FloatingLabelSelect: FC<FloatingLabelSelectProps> = ({
                 className={
                     newLabelClassName
                         ? newLabelClassName
-                        : `absolute text-sm text-gray-500 duration-300 transform 
-                        -translate-y-4 scale-75 top-2 z-10 origin-left 
-                        bg-white px-2 peer-focus:px-2 peer-focus:text-blue-600
-                        peer-focus:scale-75 peer-focus:-translate-y-4
-                        inset-s-1 ${labelClassName || ""}`
+                        : `absolute text-sm text-white duration-300 transform bg-gray-700 -translate-y-4 scale-75 top-2 z-10 origin-left 
+                           px-2 peer-focus:px-2 peer-focus:text-white peer-placeholder-shown:scale-100
+                            peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-scaled-75
+                            peer-focus:-translate-y-4 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto inset-s-1 rounded-lg ${labelClassName || ""}`
                 }
             >
                 {label}

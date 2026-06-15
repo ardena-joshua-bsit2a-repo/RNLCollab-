@@ -75,6 +75,34 @@ const UserService = {
             throw error;
         }
     },
+    uploadProfilePhoto: async (userId: string | number, file: File) => {
+        try {
+            const formData = new FormData();
+            formData.append("profile_photo", file);
+            const response = await AxiosInstance.post(
+                `/users/uploadProfilePhoto/${userId}`,
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+            );
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    removeProfilePhoto: async (userId: string | number) => {
+        try {
+            const response = await AxiosInstance.delete(`/users/removeProfilePhoto/${userId}`);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    updateProfile: async (data: any) => {
+        const response = await AxiosInstance.put('/profile/update', data);
+        return response;
+    },
 }
 
 export default UserService;

@@ -17,6 +17,9 @@ import DashboardPage from "../pages/Dashboard/DashboardPage"
 import ActivityLogsPage from "../pages/ActivityLogs/ActivityLogsPage"
 import LoginPage from "../pages/Auth/LoginPage"
 import ProtectedRoute from "./ProtectedRoute"
+import AdminEventReviewPage from "../pages/AdminApproval/AdminEventReviewPage"
+import ReportsPage from "../pages/Reports/ReportsPage"
+import ProfilePage from "../pages/Profile/ProfilePage"
 
 const AppRoutes = () => {
     return (
@@ -24,6 +27,7 @@ const AppRoutes = () => {
             <Route path="/login" element={<LoginPage />} />
 
             <Route element={<ProtectedRoute />}>
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<DashboardPage />} />
 
@@ -39,14 +43,17 @@ const AppRoutes = () => {
                         <Route path="/users" element={<UserMainPage />} />
                         <Route path="/user-trash" element={<TrashMainPage />} />
                         <Route path="/logs" element={<ActivityLogsPage />} />
+                        <Route path="/event-approval" element={<AdminEventReviewPage />} />
+                        <Route path="/reports" element={<ReportsPage />} />
                     </Route>
 
                     <Route path="/venue" element={<VenuePage />} />
                     <Route path="/venue/edit/:venue_id" element={<EditVenuePage />} />
                     <Route path="/venue/delete/:venue_id" element={<DeleteVenuePage />} />
+                    <Route path="/event-trash" element={<TrashEventPage />} />  
 
                     <Route path="/events" element={<EventMainPage />} />
-                    <Route path="/event-trash" element={<TrashEventPage />} />
+                    
                 </Route>
             </Route>
         </Routes>

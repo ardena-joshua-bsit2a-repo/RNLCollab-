@@ -9,6 +9,9 @@ import EditEventFormModal from "./components/EditEventFormModal";
 import DeleteEventFormModal from "./components/DeleteEventFormModal";
 import EventList from "./components/EventList";
 
+import ViewEventModal from "./components/ViewEventModal"; 
+import StatusActionModal from "./components/StatusActionModal";
+
 const EventMainPage = () => {
 
     const {
@@ -37,6 +40,21 @@ const EventMainPage = () => {
         showToastMessage,
         closeToastMessage
     } = useToastMessage("", false, false);
+
+    // Add alongside your other useModal hooks:
+    const {
+        isOpen: isViewEventModalOpen,
+        selectedItem: selectedEventForView,
+        openModal: openViewEventModal,
+        closeModal: closeViewEventModal
+    } = useModal<EventColumns>(false);
+
+    const {
+        isOpen: isStatusActionModalOpen,
+        selectedItem: selectedEventForStatus,
+        openModal: openStatusActionModal,
+        closeModal: closeStatusActionModal
+    } = useModal<EventColumns>(false);
 
     const {
         refresh,
@@ -78,8 +96,27 @@ const EventMainPage = () => {
                 onAddEvent={openAddEventFormModal}
                 onEditEvent={(event) => openEditEventFormModal(event)}
                 onDeleteEvent={(event) => openDeleteEventFormModal(event)}
+                onViewEvent={(event) => openViewEventModal(event)} 
+                onStatusAction={(event) => openStatusActionModal(event)}
                 refreshKey={refresh}
             />
+
+            <ViewEventModal
+                event={selectedEventForView}
+                isOpen={isViewEventModalOpen}
+                onClose={closeViewEventModal}
+                onActioned={showToastMessage} 
+                refreshKey={handleRefresh}
+            />
+
+            <StatusActionModal
+                event={selectedEventForStatus}
+                isOpen={isStatusActionModalOpen}
+                onClose={closeStatusActionModal}
+                onActioned={showToastMessage}
+                refreshKey={handleRefresh}
+            />
+
         </>
     );
 };
