@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState, type FC } from "react";
+import { useEffect, useMemo, useRef, useState, type FC } from "react";
 import EventService from "../../../services/EventService";
 import type { EventColumns } from "../../../interfaces/EventInterface";
 import {
-    Calendar,
     Building2,
     Users,
     RefreshCw,
@@ -13,18 +12,26 @@ import {
 interface AdminEventReviewListProps {
     onReviewEvent: (event: EventColumns) => void;
     refreshKey: boolean;
+    // ✅ new
+    autoOpenEventId?: number | null;
+    onAutoOpenHandled?: () => void;
+    openModal?: (event: EventColumns) => void;
 }
 
 const AdminEventReviewList: FC<AdminEventReviewListProps> = ({
     onReviewEvent,
     refreshKey,
+    autoOpenEventId,
+    onAutoOpenHandled,
+    openModal,
 }) => {
-    const [events, setEvents] = useState<EventColumns[]>([]);
+    const [events, setEvents] = useState<EventColumns[]>([])
     const [loading, setLoading] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [venueFilter, setVenueFilter] = useState("");
     const [dateFilter, setDateFilter] = useState("");
+    const autoOpened = useRef(false)
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -32,21 +39,43 @@ const AdminEventReviewList: FC<AdminEventReviewListProps> = ({
 
     const loadEvents = async () => {
         try {
-            setLoading(true);
-            const res = await EventService.loadPendingEvents();
+            setLoading(true)
+            const res = await EventService.loadPendingEvents()
             if (res.status === 200) {
-                setEvents(res.data.events);
+                setEvents(res.data.events)
             }
         } catch (error) {
-            console.error("Error loading events:", error);
+            console.error("Error loading events:", error)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     useEffect(() => {
-        loadEvents();
-    }, [refreshKey]);
+        loadEvents()
+    }, [refreshKey])
+
+    // ✅ Once events are loaded, auto-open the modal if event_id is in the URL
+    useEffect(() => {
+        if (
+            autoOpenEventId &&
+            events.length > 0 &&
+            !autoOpened.current &&
+            openModal
+        ) {
+            const target = events.find(e => e.event_id === autoOpenEventId)
+            if (target) {
+                autoOpened.current = true
+                openModal(target)
+                onAutoOpenHandled?.()
+            }
+        }
+    }, [events, autoOpenEventId])
+
+    // Reset guard when autoOpenEventId changes (e.g. user clicks another notification)
+    useEffect(() => {
+        autoOpened.current = false
+    }, [autoOpenEventId])
 
     // Reset to page 1 when filters change
     useEffect(() => {

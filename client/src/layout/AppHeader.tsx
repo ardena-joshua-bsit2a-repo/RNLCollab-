@@ -3,12 +3,15 @@ import { useHeader } from "../contexts/HeaderContext";
 import { useSidebar } from "../contexts/SidebarContext";
 import { getUserDisplayName, useAuth } from "../contexts/AuthContext";
 import { FiMenu, FiLogOut, FiUser, FiChevronDown } from "react-icons/fi";
+import { Sun, Moon } from "lucide-react"; // ← add this
+import { useTheme } from "../hooks/useTheme"; // ← add this
 import NotificationBell from "../pages/NotificationBell/components/NotificationBell";
 
 const AppHeader = () => {
     const { isOpen, toggleUserMenu } = useHeader();
     const { toggleSidebar } = useSidebar();
-    const { user, logout } = useAuth();
+    const { user, logout, isSuperAdmin } = useAuth()
+    const { isDark, toggleTheme } = useTheme(); 
     const navigate = useNavigate();
 
     const handleSignOut = async () => {
@@ -57,7 +60,10 @@ const AppHeader = () => {
                 <div className="fixed inset-0 z-40" onClick={toggleUserMenu} />
             )}
 
-            <header className="fixed top-0 left-0 right-0 z-50 h-[73px] bg-slate-950/90 backdrop-blur-xl border-b border-slate-800">
+            <header className="fixed top-0 left-0 right-0 z-50 h-[73px] 
+                bg-white/90 border-slate-200
+                dark:bg-slate-950/90 dark:border-slate-800 
+                backdrop-blur-xl border-b">
                 <div className="h-full px-4 lg:px-6">
                     <div className="flex items-center justify-between h-full">
 
@@ -65,7 +71,9 @@ const AppHeader = () => {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={toggleSidebar}
-                                className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition"
+                                className="flex h-9 w-9 items-center justify-center rounded-xl 
+                                text-slate-500 hover:bg-slate-100 hover:text-slate-900
+                                dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition"
                                 aria-label="Toggle sidebar"
                             >
                                 <FiMenu size={20} />
@@ -75,8 +83,8 @@ const AppHeader = () => {
                                     F
                                 </div>
                                 <div className="hidden sm:block">
-                                    <h1 className="text-white font-bold text-base leading-none">FilSched</h1>
-                                    <p className="text-[11px] text-slate-400 mt-0.5">Event Management System</p>
+                                    <h1 className="text-slate-900 dark:text-white font-bold text-base leading-none">FilSched</h1>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Event Management System</p>
                                 </div>
                             </div>
                         </div>
@@ -84,47 +92,58 @@ const AppHeader = () => {
                         {/* ── Right ── */}
                         <div className="flex items-center gap-2">
 
-                            <NotificationBell />
+                            <NotificationBell isSuperAdmin={isSuperAdmin} />
+
+                            {/* ── Theme Toggle ── */}
+                            <button
+                                onClick={toggleTheme}
+                                className="flex h-9 w-9 items-center justify-center rounded-xl 
+                                text-slate-500 hover:bg-slate-100 hover:text-slate-900
+                                dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition"
+                            >
+                                {isDark ? <Sun size={18} /> : <Moon size={18} />}
+                            </button>
 
                             {/* User menu */}
                             <div className="relative z-50">
                                 <button
                                     onClick={toggleUserMenu}
-                                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-slate-800 transition"
+                                    className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl 
+                                    hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                                 >
                                     {/* Small avatar in header button */}
                                     <SmallAvatar />
                                     <div className="hidden md:block text-left">
-                                        <p className="text-sm font-medium text-white leading-none">{getUserDisplayName(user) || "User"}</p>
-                                        <p className="text-[11px] text-slate-400 mt-0.5">{user?.role?.role_name || "User"}</p>
+                                        <p className="text-sm font-medium text-slate-900 dark:text-white leading-none">{getUserDisplayName(user) || "User"}</p>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{user?.role?.role_name || "User"}</p>
                                     </div>
                                     <FiChevronDown
                                         size={14}
-                                        className={`text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+                                        className={`text-slate-400 dark:text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                                     />
                                 </button>
 
                                 {/* Dropdown */}
                                 <div className={`
                                     absolute right-0 top-[52px] w-72
-                                    rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl
+                                    rounded-2xl border bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800 shadow-2xl
                                     transition-all duration-200
                                     ${isOpen ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-2 invisible"}
                                 `}>
-                                    <div className="p-4 border-b border-slate-800">
+                                    <div className="p-4 border-b border-slate-200 dark:border-slate-800">
                                         <div className="flex items-center gap-3">
                                             {/* Large avatar in dropdown */}
                                             <LargeAvatar />
                                             <div>
-                                                <p className="font-medium text-white text-sm">{getUserDisplayName(user)}</p>
-                                                <p className="text-xs text-slate-400 mt-0.5">{user?.email}</p>
+                                                <p className="font-medium text-slate-900 dark:text-white text-sm">{getUserDisplayName(user)}</p>
+                                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{user?.email}</p>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="p-2">
                                         <button
                                             onClick={() => { navigate("/profile"); toggleUserMenu(); }}
-                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-slate-800 transition"
+                                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition"
                                         >
                                             <FiUser size={15} /> Profile
                                         </button>

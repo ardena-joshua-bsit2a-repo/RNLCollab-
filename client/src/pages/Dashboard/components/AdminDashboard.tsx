@@ -200,25 +200,25 @@ const AdminDashboard = () => {
     const dayViewEvents = approvedByDate[dayViewDate] ?? [];
 
     return (
-        <div className="space-y-6 text-slate-100">
+        <div className="space-y-6 text-slate-900 dark:text-slate-100">
 
             {toast && <Toast toast={toast} onDismiss={() => setToast(null)} />}
 
             {/* Header */}
-            <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-8">
+            <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-gradient-to-br from-slate-100 via-gray-400 to-slate-100 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 p-8">
                 <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
                 <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full bg-cyan-500/10 blur-3xl" />
                 <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex items-center gap-4">
                         <div className="rounded-2xl bg-blue-500/10 p-3"><LayoutDashboard className="h-6 w-6 text-blue-400" /></div>
                         <div>
-                            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-                            <p className="mt-1 text-sm text-gray-400">Welcome back, <span className="font-medium text-white">{getUserDisplayName(user)}</span></p>
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-gray-400">Welcome back, <span className="font-medium text-slate-900 dark:text-white">{getUserDisplayName(user)}</span></p>
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300"><User size={14} className="text-blue-400" />{user?.role?.role_name ?? "—"}</span>
-                        <span className="inline-flex items-center gap-1.5 rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-300"><Building2 size={14} className="text-cyan-400" />{user?.department?.department_name ?? "—"}</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 px-4 py-2 text-sm"><User size={14} className="text-blue-400" />{user?.role?.role_name ?? "—"}</span>
+                        <span className="inline-flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-gray-300 px-4 py-2 text-sm"><Building2 size={14} className="text-cyan-400" />{user?.department?.department_name ?? "—"}</span>
                         <button onClick={() => exportBookingSummaryReport(events)} className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 hover:shadow-lg hover:shadow-blue-500/25">
                             <FileDown size={15} /> Export PDF
                         </button>
@@ -232,7 +232,7 @@ const AdminDashboard = () => {
                 <StatCard label="Approved"      value={approved.length} loading={loading} icon={<CheckCircle size={22}/>} border="border-emerald-500/10" bg="bg-emerald-500/5" iconColor="text-emerald-400"/>
                 <StatCard label="Pending"       value={pending.length}  loading={loading} icon={<Clock size={22}/>}       border="border-amber-500/10"   bg="bg-amber-500/5"   iconColor="text-amber-400"/>
                 <StatCard label="Rejected"      value={rejected}        loading={loading} icon={<XCircle size={22}/>}     border="border-red-500/10"     bg="bg-red-500/5"     iconColor="text-red-400"/>
-                <StatCard label="Total Users"   value={userCount}       loading={loading} icon={<Users size={22}/>}       border="border-indigo-500/10"  bg="bg-indigo-500/5"  iconColor="text-indigo-400"/>
+                <StatCard label="Total Users"   value={userCount}       loading={loading} icon={<Users size={22}/>}       border="border-indigo-500/100"  bg="bg-indigo-500/5"  iconColor="text-indigo-400"/>
             </div>
 
             {/* Pending alert */}

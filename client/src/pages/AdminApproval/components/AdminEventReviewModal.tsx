@@ -33,6 +33,7 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
     const [rejectionReason, setRejectionReason] = useState("");
     const [showRejectForm, setShowRejectForm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleApprove = async () => {
         if (!event) return;
@@ -51,9 +52,21 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
 
     const handleReject = async () => {
         if (!event) return;
+
+        if (!rejectionReason.trim()) {
+            setError("Rejection reason is required.");
+            return;
+        }
+
         try {
+            setError("");
             setLoading(true);
-            const res = await EventService.rejectEvent(event.event_id, rejectionReason);
+
+            const res = await EventService.rejectEvent(
+                event.event_id,
+                rejectionReason.trim()
+            );
+
             if (res.status === 200) {
                 onReviewed(res.data.message);
                 setRejectionReason("");
@@ -66,15 +79,16 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
         }
     };
 
-    if (!event) return null;
-
     const formatTime = (time: string) =>
         new Date(`1970-01-01T${time}`).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
         });
 
+    // Fix 2: guard event null in statusBadge
     const statusBadge = () => {
+        if (!event) return null; // ← add this guard
+
         switch (event.status) {
             case "approved":
                 return (
@@ -100,8 +114,18 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
         }
     };
 
+    // Fix 1: wrap onClose to reset state
+    const handleClose = () => {
+        setRejectionReason("");
+        setShowRejectForm(false);
+        setError("");
+        onClose();
+    };
+
+    if (!event) return null;
+
     return (
-        <Modal isOpen={isOpen} onClose={onClose} showCloseButton>
+        <Modal isOpen={isOpen} onClose={handleClose} showCloseButton>
             <div className="space-y-6">
 
                 {/* Hero Header — mirrors ViewEventModal */}
@@ -258,13 +282,37 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
                     {/* Rejection form — inline, same as ViewEventModal */}
                     {showRejectForm && (
                         <div className="space-y-3">
-                            <textarea
-                                value={rejectionReason}
-                                onChange={(e) => setRejectionReason(e.target.value)}
-                                placeholder="Enter rejection reason..."
-                                rows={3}
-                                className="w-full rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-white outline-none focus:border-red-500 resize-none"
-                            />
+                            <div>
+                                <label className="mb-1.5 block text-xs font-medium text-gray-400">
+                                    Rejection Reason{" "}
+                                    <span className="text-red-400">*</span>
+                                </label>
+                                <textarea
+                                    value={rejectionReason}
+                                    onChange={(e) => {
+                                        setRejectionReason(e.target.value);
+                                        if (error && e.target.value.trim()) {
+                                            setError("");
+                                        }
+                                    }}
+                                    placeholder="Enter rejection reason..."
+                                    rows={3}
+                                    required
+                                    className={`w-full rounded-2xl bg-black/20 p-4 text-sm text-white outline-none resize-none
+                                        ${
+                                            error
+                                                ? "border border-red-500 focus:border-red-500"
+                                                : "border border-white/10 focus:border-red-500"
+                                        }`}
+                                />
+                            </div>
+
+                            {error && (
+                                <p className="text-sm text-red-400">
+                                    {error}
+                                </p>
+                            )}
+
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleReject}
@@ -276,7 +324,11 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setShowRejectForm(false)}
+                                    onClick={() => {
+                                        setShowRejectForm(false);
+                                        setRejectionReason("");
+                                        setError("");
+                                    }}
                                     className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-gray-400 hover:text-white transition"
                                 >
                                     Cancel
@@ -288,7 +340,7 @@ const AdminEventReviewModal: FC<AdminEventReviewModalProps> = ({
 
                 {/* Footer */}
                 <div className="flex justify-end gap-3 border-t border-white/5 pt-6">
-                    <CloseButton label="Close" onClose={onClose} />
+                    <CloseButton label="Close" onClose={handleClose} />
                 </div>
 
             </div>

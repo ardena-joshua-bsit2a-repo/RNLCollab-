@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@variant dark (&:where(.dark, .dark *));
 
 @keyframes login-blob-float {
     0%, 100% {

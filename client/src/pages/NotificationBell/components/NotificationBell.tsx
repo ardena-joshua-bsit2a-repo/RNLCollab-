@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type JSX } from "react"
+import { useNavigate } from "react-router-dom"
 import { FiBell, FiCheck, FiCalendar, FiX } from "react-icons/fi"
 import NotificationService from "../../../services/NotificationService"
 
@@ -26,11 +27,31 @@ const timeAgo = (dateStr: string) => {
     return `${Math.floor(diff / 86400)}d ago`
 }
 
-const NotificationBell = () => {
+const getNotificationRoute = (type: string, eventId: number | null, isSuperAdmin: boolean): string => {
+    if (!eventId) return "#"
+
+    switch (type) {
+        case "new_booking":
+        case "approved":
+        case "rejected":
+            return isSuperAdmin
+                ? `/event-approval?event_id=${eventId}`
+                : `/events`
+        default:
+            return isSuperAdmin ? "/event-approval" : "/events"
+    }
+}
+
+interface NotificationBellProps {
+    isSuperAdmin: boolean
+}
+
+const NotificationBell = ({ isSuperAdmin }: NotificationBellProps) => {
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [unreadCount, setUnreadCount]     = useState(0)
     const [isOpen, setIsOpen]               = useState(false)
-    const ref = useRef<HTMLDivElement>(null)
+    const ref      = useRef<HTMLDivElement>(null)
+    const navigate = useNavigate()
 
     const fetchNotifications = async () => {
         try {
@@ -58,7 +79,9 @@ const NotificationBell = () => {
 
     const handleMarkAsRead = async (id: number) => {
         await NotificationService.markAsRead(id)
-        setNotifications(prev => prev.map(n => n.notification_id === id ? { ...n, is_read: true } : n))
+        setNotifications(prev =>
+            prev.map(n => n.notification_id === id ? { ...n, is_read: true } : n)
+        )
         setUnreadCount(prev => Math.max(0, prev - 1))
     }
 
@@ -66,6 +89,15 @@ const NotificationBell = () => {
         await NotificationService.markAllAsRead()
         setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
         setUnreadCount(0)
+    }
+
+    const handleNotificationClick = async (n: Notification) => {
+        if (!n.is_read) {
+            await handleMarkAsRead(n.notification_id)
+        }
+        const route = getNotificationRoute(n.type, n.event_id, isSuperAdmin)
+        setIsOpen(false)
+        navigate(route)
     }
 
     return (
@@ -108,8 +140,12 @@ const NotificationBell = () => {
                             notifications.map(n => (
                                 <div
                                     key={n.notification_id}
-                                    className={`flex gap-3 px-4 py-3 hover:bg-slate-800 transition cursor-pointer ${!n.is_read ? "bg-slate-800/50" : ""}`}
-                                    onClick={() => !n.is_read && handleMarkAsRead(n.notification_id)}
+                                    onClick={() => handleNotificationClick(n)}
+                                    className={`
+                                        flex gap-3 px-4 py-3 transition cursor-pointer
+                                        hover:bg-slate-700
+                                        ${!n.is_read ? "bg-slate-800/50" : ""}
+                                    `}
                                 >
                                     <div className="mt-0.5 h-7 w-7 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
                                         {iconMap[n.type] ?? <FiBell size={14} className="text-slate-400" />}

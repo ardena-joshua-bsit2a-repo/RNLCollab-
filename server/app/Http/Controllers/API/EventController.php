@@ -79,9 +79,9 @@ class EventController extends Controller
             'telephone_number'     => $validated['telephone_number'] ?? null,
             'email'                => $validated['email'],
             'status'               => 'pending',
-            'user_id'              => $validated['user_id'],
+            'user_id'              => $request->user()->user_id,
             'venue_id'             => $validated['venue_id'],
-            'department_id'        => $validated['department_id'] ?? null,
+            'department_id'        => $request->user()->department_id,
         ]);
 
         $this->fireWebhook('new_booking', $event, $request);

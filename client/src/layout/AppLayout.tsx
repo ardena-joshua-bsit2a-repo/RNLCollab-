@@ -11,7 +11,7 @@ const LayoutContent = () => {
         <>
             <AppSidebar />
             <AppHeader />
-            <div className={`pt-20 min-h-screen bg-slate-950 transition-all duration-300 ${isOpen ? "sm:pl-64" : "sm:pl-[68px]"}`}>
+            <div className={`pt-20 min-h-screen bg-slate-50 dark:bg-slate-950 transition-all duration-300 ${isOpen ? "sm:pl-64" : "sm:pl-[68px]"}`}>
                 <div className="p-4 sm:p-6">
                     <Outlet />
                 </div>
